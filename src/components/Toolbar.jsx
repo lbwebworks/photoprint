@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { GRID_OPTIONS, PAPER_SIZES, ORIENTATIONS, getUsable, mmToPx, pxToMm } from '../utils/layoutEngine'
 import { IS_LOCAL } from '../utils/customLayouts'
 
-const LAYOUTS = ['Grid', 'Free Size', 'Custom Layout']
+const LAYOUTS = ['Grid', 'Free Size']
 const MIN_PX = mmToPx(10)
 
 function LabeledSelect({ label, value, onChange, children }) {
@@ -71,11 +71,10 @@ function SizeSlider({ label, value, max, onChange }) {
 
 export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onDeleteLayout }) {
   const usable = getUsable(paper, orientation)
-  const [creating, setCreating] = useState(false)
+  const [presetsOpen, setPresetsOpen] = useState(false)
 
   function handleCreate() {
     onCreateLayout()
-    setCreating(false)
   }
 
   function handlePublish(l) {
@@ -87,6 +86,84 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
   return (
     <aside style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
       className="w-[20%] min-w-48 shrink-0 border-r flex flex-col gap-4 p-4 overflow-y-auto">
+
+      {/* Presets — collapsible, drives all controls below */}
+      <div className="flex flex-col gap-1">
+        <button
+          onClick={() => setPresetsOpen((o) => !o)}
+          className="flex items-center justify-between w-full text-xs focus:outline-none"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          <span>Presets {activeLayoutId && <span style={{ color: 'var(--text-muted)' }}>({customLayouts.find(l => l.id === activeLayoutId)?.name})</span>}</span>
+          <span>{presetsOpen ? '▲' : '▼'}</span>
+        </button>
+
+        {presetsOpen && (
+          <div className="flex flex-col gap-2 mt-1">
+            {/* Scrollable tile grid */}
+            <div className="grid grid-cols-3 gap-1 overflow-y-auto" style={{ maxHeight: '200px' }}>
+
+              {/* None tile */}
+              <div
+                onClick={() => onSelectLayout(null)}
+                style={{
+                  background: !activeLayoutId ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                  borderColor: !activeLayoutId ? '#6366f1' : 'var(--border)',
+                  color: !activeLayoutId ? 'var(--text-primary)' : 'var(--text-muted)',
+                }}
+                className="aspect-square rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
+              >
+                <span className="text-xs font-medium leading-tight text-center px-1">None</span>
+              </div>
+
+              {customLayouts.map((l) => (
+                <div
+                  key={l.id}
+                  onClick={() => onSelectLayout(l.id)}
+                  style={{
+                    background: activeLayoutId === l.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                    borderColor: activeLayoutId === l.id ? '#6366f1' : 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                  className="aspect-square rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 relative group hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
+                >
+                  <span className="text-xs font-medium leading-tight text-center px-1 line-clamp-2">{l.name}</span>
+                  <span style={{ color: 'var(--text-muted)' }} className="text-[10px] leading-tight">
+                    {l.slots ? `${l.slots.length} slots` : `${l.cols}×${l.rows}`}
+                  </span>
+
+                  {/* Action buttons — visible on hover */}
+                  <div className="absolute top-0.5 right-0.5 hidden group-hover:flex gap-0.5">
+                    {IS_LOCAL && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handlePublish(l) }}
+                        className="text-[10px] hover:text-indigo-500 transition leading-none"
+                        style={{ color: 'var(--text-muted)' }}
+                        title="Publish"
+                      >↑</button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteLayout(l.id) }}
+                      className="text-[10px] hover:text-rose-500 transition leading-none"
+                      style={{ color: 'var(--text-muted)' }}
+                      title="Delete"
+                    >✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={handleCreate}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium py-1.5 rounded transition"
+            >
+              + Create Layout
+            </button>
+          </div>
+        )}
+      </div>
+
+      <Divider />
 
       <LabeledSelect label="Paper" value={paper} onChange={(e) => onPaper(e.target.value)}>
         {Object.keys(PAPER_SIZES).map((key) => (
@@ -231,60 +308,6 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
               </span>
             </div>
           )}
-        </div>
-      )}
-
-      {template === 'Custom Layout' && (
-        <div className="flex flex-col gap-2">
-          {/* Layout list */}
-          {customLayouts.length === 0 && !creating && (
-            <p style={{ color: 'var(--text-muted)' }} className="text-xs text-center py-2">No custom layouts yet.</p>
-          )}
-          {customLayouts.map((l) => (
-            <div
-              key={l.id}
-              onClick={() => onSelectLayout(l.id)}
-              style={{
-                background: activeLayoutId === l.id ? 'var(--bg-elevated)' : 'transparent',
-                borderColor: activeLayoutId === l.id ? 'var(--border)' : 'transparent',
-                color: 'var(--text-primary)',
-              }}
-              className="flex items-center justify-between px-2 py-1.5 rounded border cursor-pointer hover:opacity-80 transition"
-            >
-              <div className="flex flex-col">
-                <span className="text-xs font-medium">{l.name}</span>
-                <span style={{ color: 'var(--text-muted)' }} className="text-xs">{l.cols} × {l.rows}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                {IS_LOCAL && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handlePublish(l) }}
-                    className="text-xs hover:text-indigo-500 transition px-1"
-                    style={{ color: 'var(--text-muted)' }}
-                    title="Copy snippet to publish"
-                  >
-                    ↑
-                  </button>
-                )}
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDeleteLayout(l.id) }}
-                  className="text-xs hover:text-rose-500 transition px-1"
-                  style={{ color: 'var(--text-muted)' }}
-                  title="Delete"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {/* Create Layout button */}
-          <button
-            onClick={handleCreate}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium py-1.5 rounded transition mt-1"
-          >
-            + Create Layout
-          </button>
         </div>
       )}
 

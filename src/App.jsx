@@ -32,11 +32,13 @@ export default function App() {
   function handleOrientation(v) { setOrientation(v); setActiveLayoutId(null) }
   function handleSlotStyle(v)   { setSlotStyle(v);   setActiveLayoutId(null) }
 
-  // Selecting a custom layout applies its saved paper/orientation/style settings
+  // Selecting a custom layout applies its saved settings and switches template
   function handleSelectLayout(id) {
+    if (!id) { setActiveLayoutId(null); setTemplate('Grid'); return }
     const layout = customLayouts.find((l) => l.id === id)
     if (!layout) return
     setActiveLayoutId(id)
+    setTemplate('Custom Layout')
     if (layout.paper)       setPaper(layout.paper)
     if (layout.orientation) setOrientation(layout.orientation)
     setSlotStyle({
