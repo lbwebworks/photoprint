@@ -98,10 +98,10 @@ export function computeSlotsBySize(slotW, slotH, paperKey, orientation) {
 
 /**
  * Auto-fill logic:
- * - 1 image  → repeated across all slots
- * - N images → assigned sequentially; last image repeats for remaining slots
+ * - Slots are filled by cycling through images repeatedly until all slots are filled.
+ * - e.g. 3 images, 8 slots → [1,2,3,1,2,3,1,2]
  */
 export function resolveSlotImages(slots, images) {
   if (!images.length) return slots.map(() => null)
-  return slots.map((_, i) => images[Math.min(i, images.length - 1)])
+  return slots.map((_, i) => images[i % images.length])
 }

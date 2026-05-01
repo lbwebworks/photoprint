@@ -3,6 +3,7 @@ import './index.css'
 import MenuBar from './components/MenuBar'
 import Toolbar from './components/Toolbar'
 import CanvasEditor from './components/CanvasEditor'
+import ImagePanel from './components/ImagePanel'
 import { mmToPx, PAPER_SIZES, getPaperDims } from './utils/layoutEngine'
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
   const [template, setTemplate] = useState('Grid')
   const [grid, setGrid] = useState(36)
   const [slotSize, setSlotSize] = useState({ w: mmToPx(35), h: mmToPx(45) })
+  const [theme, setTheme] = useState('light')
   const editorRef = useRef(null)
 
   function handleFiles(e) {
@@ -19,14 +21,22 @@ export default function App() {
     setImages((prev) => [...prev, ...urls])
   }
 
+  function handleRemove(index) {
+    setImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
   const { width, height } = getPaperDims(paper, orientation)
 
   return (
-    <div className="h-screen flex flex-col bg-[#1a1a2e] overflow-hidden">
-      {/* Top menu bar */}
-      <MenuBar onFiles={handleFiles} editorRef={editorRef} paper={paper} orientation={orientation} />
+    <div className={`${theme} h-screen flex flex-col overflow-hidden`} style={{ background: 'var(--bg-base)' }}>
+      <MenuBar
+        editorRef={editorRef}
+        paper={paper}
+        orientation={orientation}
+        theme={theme}
+        onTheme={setTheme}
+      />
 
-      {/* Sidebar + canvas */}
       <div className="flex flex-1 overflow-hidden">
         <Toolbar
           paper={paper} onPaper={setPaper}
@@ -36,7 +46,6 @@ export default function App() {
           slotSize={slotSize} onSlotSize={setSlotSize}
         />
 
-        {/* Canvas area */}
         <main className="flex-1 overflow-y-auto flex flex-col items-center p-6">
           <div className="w-full max-w-2xl shadow-2xl">
             <CanvasEditor
@@ -49,10 +58,12 @@ export default function App() {
               slotSize={slotSize}
             />
           </div>
-          <p className="mt-4 text-xs text-gray-500">
+          <p className="mt-4 text-xs" style={{ color: 'var(--text-muted)' }}>
             {`${width} × ${height} px — ${PAPER_SIZES[paper].label} ${orientation} @ 300 DPI`}
           </p>
         </main>
+
+        <ImagePanel images={images} onRemove={handleRemove} onFiles={handleFiles} />
       </div>
     </div>
   )

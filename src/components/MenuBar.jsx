@@ -1,18 +1,24 @@
 import { exportPNG, exportPDF } from '../utils/exportUtils'
 
-export default function MenuBar({ onFiles, editorRef, paper, orientation }) {
+export default function MenuBar({ editorRef, paper, orientation, theme, onTheme }) {
   function handleExportPNG() { exportPNG(editorRef.current.stageRef) }
   function handleExportPDF() { exportPDF(editorRef.current.stageRef, paper, orientation) }
 
   return (
-    <div className="w-full bg-[#12122a] border-b border-gray-700 px-6 py-3 flex items-center justify-between">
-      <span className="text-white font-bold text-lg tracking-wide">L&amp;K Printing Service</span>
+    <div style={{ background: 'var(--bg-menubar)', borderColor: 'var(--border)' }}
+      className="w-full border-b px-6 py-3 flex items-center justify-between shrink-0">
+      <span className="font-bold text-lg tracking-wide text-white">
+        L&amp;K Printing Service
+      </span>
 
       <div className="flex items-center gap-2">
-        <label className="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-1.5 rounded transition">
-          Upload Photos
-          <input type="file" multiple accept="image/*" className="hidden" onChange={onFiles} />
-        </label>
+        <button
+          onClick={() => onTheme(theme === 'dark' ? 'light' : 'dark')}
+          style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+          className="border text-sm px-3 py-1.5 rounded transition hover:opacity-80"
+        >
+          {theme === 'dark' ? '☀ Light' : '☾ Dark'}
+        </button>
         <button onClick={handleExportPNG} className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-1.5 rounded transition">
           Export PNG
         </button>

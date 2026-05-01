@@ -6,7 +6,29 @@
 
 body {
   margin: 0;
-  background: #1a1a2e;
-  color: #e0e0e0;
   font-family: system-ui, sans-serif;
+}
+
+/* Dark theme (default) */
+.dark {
+  --bg-base:       #1a1a1a;
+  --bg-surface:    #141414;
+  --bg-elevated:   #1f1f1f;
+  --bg-menubar:    #000000;
+  --border:        #2e2e2e;
+  --text-primary:  #f0f0f0;
+  --text-secondary:#a0a0a0;
+  --text-muted:    #555555;
+}
+
+/* Light theme */
+.light {
+  --bg-base:       #f1f5f9;
+  --bg-surface:    #ffffff;
+  --bg-elevated:   #e2e8f0;
+  --bg-menubar:    #1e293b;
+  --border:        #cbd5e1;
+  --text-primary:  #0f172a;
+  --text-secondary:#475569;
+  --text-muted:    #94a3b8;
 }
