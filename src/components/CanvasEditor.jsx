@@ -1,10 +1,20 @@
 import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { Stage, Layer, Rect } from 'react-konva'
 import Slot from './Slot'
-import { PAPER_SIZES, mmToPx, getPaperDims, computeSlots, computeSlotsByGrid, computeSlotsBySize, resolveSlotImages } from '../utils/layoutEngine'
+import { mmToPx, getPaperDims, computeSlots, computeSlotsByGrid, computeSlotsBySize, resolveSlotImages } from '../utils/layoutEngine'
 
 const CanvasEditor = forwardRef(function CanvasEditor(
-  { images = [], template = 'Grid', grid = { mode: 'square', slots: 36, cols: 6, rows: 6 }, slotSize = { w: mmToPx(35), h: mmToPx(45) }, paper = 'A4', orientation = 'portrait', slotStyle = { borderWidth: 0, borderColor: '#000000', gap: 0 } },
+  {
+    images = [],
+    template = 'Grid',
+    grid = { mode: 'square', slots: 16, cols: 4, rows: 4 },
+    slotSize = { w: mmToPx(35), h: mmToPx(45) },
+    paper = 'A4',
+    orientation = 'portrait',
+    slotStyle = { borderWidth: 0, borderColor: '#000000', gap: 0 },
+    customLayouts = [],
+    activeLayoutId = null,
+  },
   ref
 ) {
   const containerRef = useRef(null)
@@ -21,14 +31,24 @@ const CanvasEditor = forwardRef(function CanvasEditor(
 
   const { width: pageW, height: pageH } = getPaperDims(paper, orientation)
 
-  const slots = template === 'Free Size'
-    ? computeSlotsBySize(slotSize.w, slotSize.h, paper, orientation, slotStyle.gap)
-    : grid.mode === 'custom'
+  let slots = []
+  if (template === 'Free Size') {
+    slots = computeSlotsBySize(slotSize.w, slotSize.h, paper, orientation, slotStyle.gap)
+  } else if (template === 'Custom Layout') {
+    const layout = customLayouts.find((l) => l.id === activeLayoutId)
+    if (layout) {
+      // Free-form slots stored directly, or grid-derived if cols/rows set
+      slots = layout.slots
+        ? layout.slots
+        : computeSlotsByGrid(layout.cols, layout.rows, paper, orientation, slotStyle.gap)
+    }
+  } else {
+    slots = grid.mode === 'custom'
       ? computeSlotsByGrid(grid.cols, grid.rows, paper, orientation, slotStyle.gap)
       : computeSlots(Math.round(Math.sqrt(grid.slots)), paper, orientation, slotStyle.gap)
+  }
 
   const slotUrls = resolveSlotImages(slots, images)
-  // Scale stage to fit container width while preserving paper aspect ratio
   const stageScale = containerWidth / pageW
 
   return (
@@ -42,7 +62,6 @@ const CanvasEditor = forwardRef(function CanvasEditor(
           scaleY={stageScale}
         >
           <Layer>
-            {/* Paper background at true resolution */}
             <Rect x={0} y={0} width={pageW} height={pageH} fill="white" />
             {slots.map((slot, i) => (
               <Slot key={slot.id} slot={slot} url={slotUrls[i]} slotStyle={slotStyle} />

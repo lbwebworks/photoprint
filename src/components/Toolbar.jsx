@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { GRID_OPTIONS, PAPER_SIZES, ORIENTATIONS, getUsable, mmToPx, pxToMm } from '../utils/layoutEngine'
+import { IS_LOCAL } from '../utils/customLayouts'
 
-const LAYOUTS = ['Grid', 'Free Size']
+const LAYOUTS = ['Grid', 'Free Size', 'Custom Layout']
 const MIN_PX = mmToPx(10)
 
 function LabeledSelect({ label, value, onChange, children }) {
@@ -67,8 +69,20 @@ function SizeSlider({ label, value, max, onChange }) {
   )
 }
 
-export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle }) {
+export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onDeleteLayout }) {
   const usable = getUsable(paper, orientation)
+  const [creating, setCreating] = useState(false)
+
+  function handleCreate() {
+    onCreateLayout()
+    setCreating(false)
+  }
+
+  function handlePublish(l) {
+    const snippet = `  { id: '${l.id}', name: '${l.name}', cols: ${l.cols}, rows: ${l.rows} },`
+    navigator.clipboard.writeText(snippet)
+      .then(() => alert(`Copied to clipboard!\n\nPaste into SAMPLE_LAYOUTS in\nsrc/utils/customLayouts.js\n\n${snippet}`))
+  }
 
   return (
     <aside style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
@@ -217,6 +231,60 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
               </span>
             </div>
           )}
+        </div>
+      )}
+
+      {template === 'Custom Layout' && (
+        <div className="flex flex-col gap-2">
+          {/* Layout list */}
+          {customLayouts.length === 0 && !creating && (
+            <p style={{ color: 'var(--text-muted)' }} className="text-xs text-center py-2">No custom layouts yet.</p>
+          )}
+          {customLayouts.map((l) => (
+            <div
+              key={l.id}
+              onClick={() => onSelectLayout(l.id)}
+              style={{
+                background: activeLayoutId === l.id ? 'var(--bg-elevated)' : 'transparent',
+                borderColor: activeLayoutId === l.id ? 'var(--border)' : 'transparent',
+                color: 'var(--text-primary)',
+              }}
+              className="flex items-center justify-between px-2 py-1.5 rounded border cursor-pointer hover:opacity-80 transition"
+            >
+              <div className="flex flex-col">
+                <span className="text-xs font-medium">{l.name}</span>
+                <span style={{ color: 'var(--text-muted)' }} className="text-xs">{l.cols} × {l.rows}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {IS_LOCAL && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handlePublish(l) }}
+                    className="text-xs hover:text-indigo-500 transition px-1"
+                    style={{ color: 'var(--text-muted)' }}
+                    title="Copy snippet to publish"
+                  >
+                    ↑
+                  </button>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDeleteLayout(l.id) }}
+                  className="text-xs hover:text-rose-500 transition px-1"
+                  style={{ color: 'var(--text-muted)' }}
+                  title="Delete"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* Create Layout button */}
+          <button
+            onClick={handleCreate}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium py-1.5 rounded transition mt-1"
+          >
+            + Create Layout
+          </button>
         </div>
       )}
 
