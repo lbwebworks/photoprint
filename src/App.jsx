@@ -11,7 +11,7 @@ export default function App() {
   const [paper, setPaper] = useState('A4')
   const [orientation, setOrientation] = useState('portrait')
   const [template, setTemplate] = useState('Grid')
-  const [grid, setGrid] = useState(36)
+  const [grid, setGrid] = useState({ mode: 'square', slots: 16, cols: 4, rows: 4 })
   const [slotSize, setSlotSize] = useState({ w: mmToPx(35), h: mmToPx(45) })
   const [slotStyle, setSlotStyle] = useState({ borderWidth: 0, borderColor: '#000000', gap: 0 })
   const [theme, setTheme] = useState('light')

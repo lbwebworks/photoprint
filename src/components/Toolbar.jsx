@@ -167,11 +167,57 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
       </LabeledSelect>
 
       {template === 'Grid' && (
-        <LabeledSelect label="Slots" value={grid} onChange={(e) => onGrid(Number(e.target.value))}>
-          {GRID_OPTIONS.map((n) => (
-            <option key={n} value={n}>{n} slot{n !== 1 ? 's' : ''}</option>
-          ))}
-        </LabeledSelect>
+        <div className="flex flex-col gap-3">
+          {/* Square presets dropdown */}
+          <LabeledSelect
+            label="Slots"
+            value={grid.mode === 'square' ? grid.slots : 'custom'}
+            onChange={(e) => {
+              const v = e.target.value
+              if (v === 'custom') {
+                onGrid({ ...grid, mode: 'custom' })
+              } else {
+                const n = Number(v)
+                const side = Math.round(Math.sqrt(n))
+                onGrid({ mode: 'square', slots: n, cols: side, rows: side })
+              }
+            }}
+          >
+            <option value="custom">Custom…</option>
+            {GRID_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n} slot{n !== 1 ? 's' : ''}</option>
+            ))}
+          </LabeledSelect>
+
+          {/* Custom cols × rows inputs */}
+          {grid.mode === 'custom' && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-1 flex-1">
+                  <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Columns</span>
+                  <input
+                    type="number" min={1} max={24} value={grid.cols}
+                    onChange={(e) => onGrid({ ...grid, cols: Math.max(1, Number(e.target.value)) })}
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                    className="w-full text-sm px-3 py-2 rounded border focus:outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 flex-1">
+                  <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Rows</span>
+                  <input
+                    type="number" min={1} max={24} value={grid.rows}
+                    onChange={(e) => onGrid({ ...grid, rows: Math.max(1, Number(e.target.value)) })}
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                    className="w-full text-sm px-3 py-2 rounded border focus:outline-none"
+                  />
+                </div>
+              </div>
+              <span style={{ color: 'var(--text-muted)' }} className="text-xs text-center">
+                {grid.cols} × {grid.rows} = {grid.cols * grid.rows} slots
+              </span>
+            </div>
+          )}
+        </div>
       )}
 
       {template === 'Free Size' && (

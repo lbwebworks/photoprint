@@ -48,18 +48,39 @@ export function getUsable(paperKey, orientation) {
 }
 
 /**
- * Template: Grid
- * NxN equal slots that fill the usable area exactly, with optional gap between slots.
+ * Template: Grid (square)
+ * NxN equal slots that fill the usable area exactly, with optional gap.
  */
 export function computeSlots(n, paperKey, orientation, gap = 0) {
   const { w: usableW, h: usableH } = getUsable(paperKey, orientation)
-  // Total gap space: (n-1) gaps per axis
   const slotW = (usableW - gap * (n - 1)) / n
   const slotH = (usableH - gap * (n - 1)) / n
 
   const slots = []
   for (let r = 0; r < n; r++)
     for (let c = 0; c < n; c++)
+      slots.push({
+        id: `${r}-${c}`,
+        x: MARGIN + c * (slotW + gap),
+        y: MARGIN + r * (slotH + gap),
+        w: slotW,
+        h: slotH,
+      })
+  return slots
+}
+
+/**
+ * Template: Grid (custom cols × rows)
+ * Fills the usable area with the given col/row count, with optional gap.
+ */
+export function computeSlotsByGrid(cols, rows, paperKey, orientation, gap = 0) {
+  const { w: usableW, h: usableH } = getUsable(paperKey, orientation)
+  const slotW = (usableW - gap * (cols - 1)) / cols
+  const slotH = (usableH - gap * (rows - 1)) / rows
+
+  const slots = []
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
       slots.push({
         id: `${r}-${c}`,
         x: MARGIN + c * (slotW + gap),
