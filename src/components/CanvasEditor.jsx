@@ -4,7 +4,7 @@ import Slot from './Slot'
 import { PAPER_SIZES, mmToPx, getPaperDims, computeSlots, computeSlotsBySize, resolveSlotImages } from '../utils/layoutEngine'
 
 const CanvasEditor = forwardRef(function CanvasEditor(
-  { images = [], template = 'Grid', grid = 6, slotSize = { w: mmToPx(35), h: mmToPx(45) }, paper = 'A4', orientation = 'portrait' },
+  { images = [], template = 'Grid', grid = 6, slotSize = { w: mmToPx(35), h: mmToPx(45) }, paper = 'A4', orientation = 'portrait', slotStyle = { borderWidth: 0, borderColor: '#000000', gap: 0 } },
   ref
 ) {
   const containerRef = useRef(null)
@@ -22,8 +22,8 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   const { width: pageW, height: pageH } = getPaperDims(paper, orientation)
 
   const slots = template === 'Free Size'
-    ? computeSlotsBySize(slotSize.w, slotSize.h, paper, orientation)
-    : computeSlots(Math.round(Math.sqrt(grid)), paper, orientation)
+    ? computeSlotsBySize(slotSize.w, slotSize.h, paper, orientation, slotStyle.gap)
+    : computeSlots(Math.round(Math.sqrt(grid)), paper, orientation, slotStyle.gap)
 
   const slotUrls = resolveSlotImages(slots, images)
   // Scale stage to fit container width while preserving paper aspect ratio
@@ -43,7 +43,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
             {/* Paper background at true resolution */}
             <Rect x={0} y={0} width={pageW} height={pageH} fill="white" />
             {slots.map((slot, i) => (
-              <Slot key={slot.id} slot={slot} url={slotUrls[i]} />
+              <Slot key={slot.id} slot={slot} url={slotUrls[i]} slotStyle={slotStyle} />
             ))}
           </Layer>
         </Stage>

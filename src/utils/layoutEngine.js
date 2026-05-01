@@ -49,20 +49,21 @@ export function getUsable(paperKey, orientation) {
 
 /**
  * Template: Grid
- * NxN equal slots that fill the usable area exactly. No gaps.
+ * NxN equal slots that fill the usable area exactly, with optional gap between slots.
  */
-export function computeSlots(n, paperKey, orientation) {
+export function computeSlots(n, paperKey, orientation, gap = 0) {
   const { w: usableW, h: usableH } = getUsable(paperKey, orientation)
-  const slotW = usableW / n
-  const slotH = usableH / n
+  // Total gap space: (n-1) gaps per axis
+  const slotW = (usableW - gap * (n - 1)) / n
+  const slotH = (usableH - gap * (n - 1)) / n
 
   const slots = []
   for (let r = 0; r < n; r++)
     for (let c = 0; c < n; c++)
       slots.push({
         id: `${r}-${c}`,
-        x: MARGIN + c * slotW,
-        y: MARGIN + r * slotH,
+        x: MARGIN + c * (slotW + gap),
+        y: MARGIN + r * (slotH + gap),
         w: slotW,
         h: slotH,
       })
@@ -70,26 +71,26 @@ export function computeSlots(n, paperKey, orientation) {
 }
 
 /**
- * Template: Custom Size
- * Pack as many slotW × slotH slots as fit in the usable area.
+ * Template: Free Size
+ * Pack as many slotW × slotH slots as fit in the usable area, with optional gap.
  * Remaining space is split evenly (centered grid).
- * slotW and slotH are in pixels at 300 DPI.
  */
-export function computeSlotsBySize(slotW, slotH, paperKey, orientation) {
+export function computeSlotsBySize(slotW, slotH, paperKey, orientation, gap = 0) {
   const { w: usableW, h: usableH } = getUsable(paperKey, orientation)
-  const cols = Math.max(1, Math.floor(usableW / slotW))
-  const rows = Math.max(1, Math.floor(usableH / slotH))
-  // Center the grid within the usable area
-  const offsetX = MARGIN + Math.round((usableW - cols * slotW) / 2)
-  const offsetY = MARGIN + Math.round((usableH - rows * slotH) / 2)
+  const cols = Math.max(1, Math.floor((usableW + gap) / (slotW + gap)))
+  const rows = Math.max(1, Math.floor((usableH + gap) / (slotH + gap)))
+  const gridW = cols * slotW + (cols - 1) * gap
+  const gridH = rows * slotH + (rows - 1) * gap
+  const offsetX = MARGIN + Math.round((usableW - gridW) / 2)
+  const offsetY = MARGIN + Math.round((usableH - gridH) / 2)
 
   const slots = []
   for (let r = 0; r < rows; r++)
     for (let c = 0; c < cols; c++)
       slots.push({
         id: `${r}-${c}`,
-        x: offsetX + c * slotW,
-        y: offsetY + r * slotH,
+        x: offsetX + c * (slotW + gap),
+        y: offsetY + r * (slotH + gap),
         w: slotW,
         h: slotH,
       })

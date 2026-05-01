@@ -67,7 +67,7 @@ function SizeSlider({ label, value, max, onChange }) {
   )
 }
 
-export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize }) {
+export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle }) {
   const usable = getUsable(paper, orientation)
 
   return (
@@ -85,6 +85,78 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </LabeledSelect>
+
+      <Divider />
+
+      {/* Slot style controls */}
+      <div className="flex flex-col gap-3">
+        <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Border</span>
+
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between items-center text-xs">
+            <span style={{ color: 'var(--text-secondary)' }}>Width</span>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={slotStyle.borderWidth}
+                onChange={(e) => onSlotStyle({ ...slotStyle, borderWidth: Math.max(0, Number(e.target.value)) })}
+                style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                className="w-14 text-xs px-2 py-1 rounded border focus:outline-none text-right"
+              />
+              <span style={{ color: 'var(--text-muted)' }}>px</span>
+            </div>
+          </div>
+          <input
+            type="range" min={0} max={20} value={slotStyle.borderWidth}
+            onChange={(e) => onSlotStyle({ ...slotStyle, borderWidth: Number(e.target.value) })}
+            className="w-full accent-indigo-500 cursor-pointer"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Color</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={slotStyle.borderColor}
+              onChange={(e) => onSlotStyle({ ...slotStyle, borderColor: e.target.value })}
+              className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent"
+            />
+            <input
+              type="text"
+              value={slotStyle.borderColor}
+              onChange={(e) => onSlotStyle({ ...slotStyle, borderColor: e.target.value })}
+              style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+              className="flex-1 text-xs px-2 py-1 rounded border focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between items-center text-xs">
+            <span style={{ color: 'var(--text-secondary)' }}>Gap</span>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0}
+                max={200}
+                value={slotStyle.gap}
+                onChange={(e) => onSlotStyle({ ...slotStyle, gap: Math.max(0, Number(e.target.value)) })}
+                style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                className="w-14 text-xs px-2 py-1 rounded border focus:outline-none text-right"
+              />
+              <span style={{ color: 'var(--text-muted)' }}>px</span>
+            </div>
+          </div>
+          <input
+            type="range" min={0} max={200} value={slotStyle.gap}
+            onChange={(e) => onSlotStyle({ ...slotStyle, gap: Number(e.target.value) })}
+            className="w-full accent-indigo-500 cursor-pointer"
+          />
+        </div>
+      </div>
 
       <Divider />
 

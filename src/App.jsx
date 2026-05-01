@@ -13,6 +13,7 @@ export default function App() {
   const [template, setTemplate] = useState('Grid')
   const [grid, setGrid] = useState(36)
   const [slotSize, setSlotSize] = useState({ w: mmToPx(35), h: mmToPx(45) })
+  const [slotStyle, setSlotStyle] = useState({ borderWidth: 0, borderColor: '#000000', gap: 0 })
   const [theme, setTheme] = useState('light')
   const editorRef = useRef(null)
 
@@ -44,6 +45,7 @@ export default function App() {
           template={template} onTemplate={setTemplate}
           grid={grid} onGrid={setGrid}
           slotSize={slotSize} onSlotSize={setSlotSize}
+          slotStyle={slotStyle} onSlotStyle={setSlotStyle}
         />
 
         <main className="flex-1 overflow-y-auto flex flex-col items-center p-6">
@@ -56,6 +58,7 @@ export default function App() {
               template={template}
               grid={grid}
               slotSize={slotSize}
+              slotStyle={slotStyle}
             />
           </div>
           <p className="mt-4 text-xs" style={{ color: 'var(--text-muted)' }}>

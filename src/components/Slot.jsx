@@ -59,11 +59,17 @@ function SlotImage({ url, slotW, slotH }) {
   )
 }
 
-export default function Slot({ slot, url }) {
+export default function Slot({ slot, url, slotStyle }) {
+  const { borderWidth = 0, borderColor = '#000000' } = slotStyle || {}
   return (
-    // Group acts as a clipping mask — image cannot visually escape the slot
     <Group x={slot.x} y={slot.y} clipX={0} clipY={0} clipWidth={slot.w} clipHeight={slot.h}>
-      <Rect width={slot.w} height={slot.h} fill="#f0f4ff" stroke="#a0aec0" strokeWidth={4} />
+      <Rect
+        width={slot.w}
+        height={slot.h}
+        fill={url ? '#fefeff' : '#f5f7fa'}
+        stroke={borderWidth > 0 ? borderColor : '#c0c8d8'}
+        strokeWidth={borderWidth > 0 ? borderWidth : 2}
+      />
       {url && <SlotImage url={url} slotW={slot.w} slotH={slot.h} />}
     </Group>
   )
