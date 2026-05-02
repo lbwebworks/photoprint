@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { Stage, Layer, Rect, Transformer } from 'react-konva'
+import { Stage, Layer, Rect, Transformer, Group, Circle, Text } from 'react-konva'
 import { getPaperDims, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm, computeBlocksByGrid } from '../utils/layoutEngine'
 
 const DEFAULT_BLOCK_W = 400
@@ -11,20 +11,104 @@ const UNIT_OPTIONS = [
   { value: 'in', label: 'inch' },
 ]
 
-function ResizableBlock({ block, isSelected, onSelect, onChange, pageW, pageH, keepRatio = false }) {
-  const shapeRef = useRef(null)
+// Gear icon rendered as a Konva Group — sits at top-right of the block.
+// All sizes are specified in screen pixels; dividing by stageScale converts them
+// to paper-pixel space so they appear at a fixed physical size on screen.
+function BlockActionButton({ blockW, blockH, stageScale, onToggle, showActions, onCopy, onDelete }) {
+  // Fixed screen-pixel sizes (matches the old DOM button)
+  const S = 1 / stageScale          // 1 screen-px in paper-px
+  const BTN_R  = 14 * S             // gear circle radius
+  const PAD    = 6  * S             // padding from block edge
+  const BTN_X  = blockW - BTN_R - PAD
+  const BTN_Y  = BTN_R + PAD
+
+  // Menu item dimensions in screen px → paper px
+  const ITEM_W = 52 * S
+  const ITEM_H = 22 * S
+  const ITEM_GAP = 4 * S
+  const FONT_BTN = 11 * S
+  const FONT_GEAR = 13 * S
+  const CORNER = 4 * S
+
+  // Position menu to the right of the gear button
+  const MENU_X = BTN_X + BTN_R + PAD
+  const MENU_Y = BTN_Y - BTN_R
+
+  return (
+    <Group>
+      {/* Gear circle */}
+      <Circle
+        x={BTN_X} y={BTN_Y} radius={BTN_R}
+        fill="rgba(255,255,255,0.95)" stroke="#cbd5e1" strokeWidth={S}
+        shadowColor="black" shadowBlur={4 * S} shadowOpacity={0.12}
+        onClick={(e) => { e.cancelBubble = true; onToggle() }}
+        onTap={(e) => { e.cancelBubble = true; onToggle() }}
+        onMouseEnter={(e) => { e.target.fill('rgba(241,245,249,0.98)'); e.target.getLayer().batchDraw() }}
+        onMouseLeave={(e) => { e.target.fill('rgba(255,255,255,0.95)'); e.target.getLayer().batchDraw() }}
+      />
+      <Text
+        x={BTN_X - BTN_R} y={BTN_Y - BTN_R}
+        width={BTN_R * 2} height={BTN_R * 2}
+        text="⚙" fontSize={FONT_GEAR} align="center" verticalAlign="middle"
+        fill="#475569" listening={false}
+      />
+
+      {/* Dropdown menu — shown to the left of the gear button */}
+      {showActions && (
+        <Group x={MENU_X} y={MENU_Y}>
+          {/* Copy button */}
+          <Rect
+            width={ITEM_W} height={ITEM_H} cornerRadius={CORNER}
+            fill="#475569"
+            onClick={(e) => { e.cancelBubble = true; onCopy() }}
+            onTap={(e) => { e.cancelBubble = true; onCopy() }}
+            onMouseEnter={(e) => { e.target.fill('#334155'); e.target.getLayer().batchDraw() }}
+            onMouseLeave={(e) => { e.target.fill('#475569'); e.target.getLayer().batchDraw() }}
+          />
+          <Text
+            x={0} y={0} width={ITEM_W} height={ITEM_H}
+            text="Copy" fontSize={FONT_BTN} align="center" verticalAlign="middle"
+            fill="white" listening={false}
+          />
+          {/* Delete button */}
+          <Rect
+            y={ITEM_H + ITEM_GAP} width={ITEM_W} height={ITEM_H} cornerRadius={CORNER}
+            fill="#e11d48"
+            onClick={(e) => { e.cancelBubble = true; onDelete() }}
+            onTap={(e) => { e.cancelBubble = true; onDelete() }}
+            onMouseEnter={(e) => { e.target.fill('#be123c'); e.target.getLayer().batchDraw() }}
+            onMouseLeave={(e) => { e.target.fill('#e11d48'); e.target.getLayer().batchDraw() }}
+          />
+          <Text
+            x={0} y={ITEM_H + ITEM_GAP} width={ITEM_W} height={ITEM_H}
+            text="Delete" fontSize={FONT_BTN} align="center" verticalAlign="middle"
+            fill="white" listening={false}
+          />
+        </Group>
+      )}
+    </Group>
+  )
+}
+
+function ResizableBlock({ block, isSelected, onSelect, onChange, onCopy, onDelete, pageW, pageH, keepRatio, stageScale }) {
+  const groupRef = useRef(null)
   const trRef = useRef(null)
+  const [showActions, setShowActions] = useState(false)
 
   useEffect(() => {
-    if (isSelected && trRef.current && shapeRef.current) {
-      trRef.current.nodes([shapeRef.current])
+    if (isSelected && trRef.current && groupRef.current) {
+      trRef.current.nodes([groupRef.current])
       trRef.current.getLayer().batchDraw()
     }
   }, [isSelected])
 
+  // Close action menu when block is deselected
+  useEffect(() => {
+    if (!isSelected) setShowActions(false)
+  }, [isSelected])
+
   function handleDragEnd(e) {
     const node = e.target
-    // Clamp position within paper margins
     const x = Math.min(Math.max(node.x(), MARGIN), pageW - MARGIN - block.w)
     const y = Math.min(Math.max(node.y(), MARGIN), pageH - MARGIN - block.h)
     node.position({ x, y })
@@ -32,36 +116,54 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, pageW, pageH, k
   }
 
   function handleTransformEnd() {
-    const node = shapeRef.current
+    const node = groupRef.current
     const scaleX = node.scaleX()
     const scaleY = node.scaleY()
     node.scaleX(1)
     node.scaleY(1)
-    const w = Math.max(mmToPx(10), node.width() * scaleX)
-    const h = Math.max(mmToPx(10), node.height() * scaleY)
-    // Clamp within margins
+    const w = Math.max(mmToPx(10), block.w * scaleX)
+    const h = Math.max(mmToPx(10), block.h * scaleY)
     const x = Math.min(Math.max(node.x(), MARGIN), pageW - MARGIN - w)
     const y = Math.min(Math.max(node.y(), MARGIN), pageH - MARGIN - h)
+    node.position({ x, y })
     onChange({ ...block, x, y, w, h })
   }
 
   return (
     <>
-      <Rect
-        ref={shapeRef}
+      <Group
+        ref={groupRef}
         x={block.x}
         y={block.y}
         width={block.w}
         height={block.h}
-        fill="#f0f4ff"
-        stroke={isSelected ? '#6366f1' : '#a0aec0'}
-        strokeWidth={isSelected ? 6 : 3}
         draggable
-        onClick={() => onSelect(block.id)}
-        onTap={() => onSelect(block.id)}
+        onClick={() => { onSelect(block.id); setShowActions(false) }}
+        onTap={() => { onSelect(block.id); setShowActions(false) }}
         onDragEnd={handleDragEnd}
         onTransformEnd={handleTransformEnd}
-      />
+      >
+        <Rect
+          x={0}
+          y={0}
+          width={block.w}
+          height={block.h}
+          fill="#f0f4ff"
+          stroke={isSelected ? '#6366f1' : '#a0aec0'}
+          strokeWidth={isSelected ? 6 : 3}
+        />
+        {isSelected && (
+          <BlockActionButton
+            blockW={block.w}
+            blockH={block.h}
+            stageScale={stageScale}
+            showActions={showActions}
+            onToggle={() => setShowActions((v) => !v)}
+            onCopy={() => { setShowActions(false); onCopy(block.id) }}
+            onDelete={() => { setShowActions(false); onDelete(block.id) }}
+          />
+        )}
+      </Group>
       {isSelected && (
         <Transformer
           ref={trRef}
@@ -85,7 +187,6 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
   const [name, setName] = useState('')
   const [unit, setUnit] = useState('px')
   const [freeForm, setFreeForm] = useState(false)
-  const [showBlockActions, setShowBlockActions] = useState(false)
 
   useEffect(() => {
     if (!initialLayout) {
@@ -143,14 +244,13 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
     setSelectedId(id)
   }
 
-  function removeSelected() {
-    setBlocks((prev) => prev.filter((s) => s.id !== selectedId))
-    setSelectedId(null)
-    setShowBlockActions(false)
+  function removeBlock(id) {
+    setBlocks((prev) => prev.filter((s) => s.id !== id))
+    if (selectedId === id) setSelectedId(null)
   }
 
-  function copySelected() {
-    const block = blocks.find((s) => s.id === selectedId)
+  function copyBlock(id) {
+    const block = blocks.find((s) => s.id === id)
     if (!block) return
     const offset = mmToPx(5)
     const x = Math.min(block.x + offset, pageW - MARGIN - block.w)
@@ -158,7 +258,6 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
     const copy = { ...block, id: `block-${Date.now()}`, x, y }
     setBlocks((prev) => [...prev, copy])
     setSelectedId(copy.id)
-    setShowBlockActions(false)
   }
 
   function handleChange(updated) {
@@ -200,10 +299,6 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
   }
 
   const selected = blocks.find((s) => s.id === selectedId)
-
-  useEffect(() => {
-    setShowBlockActions(false)
-  }, [selectedId])
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
@@ -319,55 +414,16 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
                   isSelected={block.id === selectedId}
                   onSelect={setSelectedId}
                   onChange={handleChange}
+                  onCopy={copyBlock}
+                  onDelete={removeBlock}
                   pageW={pageW}
                   pageH={pageH}
                   keepRatio={!freeForm}
+                  stageScale={stageScale}
                 />
               ))}
             </Layer>
           </Stage>
-        )}
-
-        {selected && (
-          <div
-            onMouseDown={(e) => e.stopPropagation()}
-            className="absolute z-10 flex flex-col items-end"
-            style={{
-              left: Math.max(Math.min((selected.x + selected.w) * stageScale - 40, containerWidth - 40), 0),
-              top: Math.max(selected.y * stageScale + 8, 8),
-            }}
-          >
-            <button
-              type="button"
-              onMouseDown={(e) => { e.stopPropagation(); }}
-              onClick={(e) => { e.stopPropagation(); setShowBlockActions((prev) => !prev) }}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 border border-slate-300 text-slate-700 shadow transition hover:bg-slate-100"
-              aria-label="Block actions"
-            >
-              ⚙
-            </button>
-            {showBlockActions && (
-              <div
-                onMouseDown={(e) => { e.stopPropagation(); }}
-                className="absolute left-full top-0 ml-2 flex flex-col gap-2 rounded bg-white/95 border border-slate-300 p-2 shadow-lg"
-              >
-                <button
-                  type="button"
-                  onClick={copySelected}
-                  className="bg-slate-600 hover:bg-slate-500 text-white text-xs font-medium px-3 py-1 rounded transition"
-                >
-                  Copy
-                </button>
-                <button
-                  type="button"
-                  onClick={removeSelected}
-                  className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium px-3 py-1 rounded transition"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
         )}
       </div>
 
