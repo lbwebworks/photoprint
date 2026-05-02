@@ -179,7 +179,7 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, onCopy, onDelet
   )
 }
 
-export default function LayoutBuilder({ paper, orientation, borderWidth, borderColor, gap, onSave, onCancel, initialLayout = null }) {
+export default function PresetBuilder({ paper, orientation, borderWidth, borderColor, gap, onSave, onCancel, initialPreset = null }) {
   const containerRef = useRef(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [blocks, setBlocks] = useState([])
@@ -189,21 +189,21 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
   const [freeForm, setFreeForm] = useState(false)
 
   useEffect(() => {
-    if (!initialLayout) {
+    if (!initialPreset) {
       setBlocks([])
       setName('')
       setSelectedId(null)
       return
     }
 
-    const layoutBlocks = initialLayout.slots
-      ? initialLayout.slots
-      : computeBlocksByGrid(initialLayout.cols, initialLayout.rows, paper, orientation, initialLayout.gap ?? gap)
+    const layoutBlocks = initialPreset.slots
+      ? initialPreset.slots
+      : computeBlocksByGrid(initialPreset.cols, initialPreset.rows, paper, orientation, initialPreset.gap ?? gap)
 
     setBlocks(layoutBlocks)
-    setName(initialLayout.name || '')
+    setName(initialPreset.name || '')
     setSelectedId(layoutBlocks[0]?.id ?? null)
-  }, [initialLayout, paper, orientation, gap])
+  }, [initialPreset, paper, orientation, gap])
 
   const formatDisplayValue = (px) => {
     switch (unit) {
@@ -286,10 +286,10 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
   }
 
   function handleSave() {
-    if (!name.trim()) { alert('Please enter a layout name.'); return }
+    if (!name.trim()) { alert('Please enter a preset name.'); return }
     if (blocks.length === 0) { alert('Please add at least one block.'); return }
     onSave({
-      ...(initialLayout?.id ? { id: initialLayout.id } : {}),
+      ...(initialPreset?.id ? { id: initialPreset.id } : {}),
       name: name.trim(),
       paper, orientation,
       borderWidth, borderColor, gap,
@@ -306,7 +306,7 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
       <div className="flex items-center gap-2 flex-wrap justify-center w-full max-w-2xl">
         <input
           type="text"
-          placeholder="Layout name"
+          placeholder="Preset name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
@@ -318,7 +318,7 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
         </button>
         <button onClick={handleSave}
           className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-1.5 rounded transition">
-          Save Layout
+          Save Preset
         </button>
         <button onClick={onCancel}
           style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}

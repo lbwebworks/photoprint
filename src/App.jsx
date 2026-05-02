@@ -3,10 +3,10 @@ import './index.css'
 import MenuBar from './components/MenuBar'
 import Toolbar from './components/Toolbar'
 import CanvasEditor from './components/CanvasEditor'
-import LayoutBuilder from './components/LayoutBuilder'
+import PresetBuilder from './components/PresetBuilder'
 import ImagePanel from './components/ImagePanel'
 import { mmToPx, PAPER_SIZES, getPaperDims } from './utils/layoutEngine'
-import { loadLayouts, createLayout, updateLayout, deleteLayout } from './utils/customLayouts'
+import { loadPresets, createPreset, updatePreset, deletePreset } from './utils/presets'
 import { usePersistedState } from './utils/usePersistedState'
 
 export default function App() {
@@ -18,75 +18,75 @@ export default function App() {
   const [grid, setGrid]                 = useState({ mode: 'square', slots: 16, cols: 4, rows: 4 })
   const [blockSize, setBlockSize]       = useState({ w: mmToPx(35), h: mmToPx(45) })
   const [blockStyle, setBlockStyle]     = useState({ borderWidth: 0, borderColor: '#000000', gap: 0 })
-  const [activeLayoutId, setActiveLayoutId] = useState(null)
-  const [buildingLayout, setBuildingLayout] = useState(false)
-  const [editingLayout, setEditingLayout] = useState(null)
+  const [activePresetId, setActivePresetId] = useState(null)
+  const [buildingPreset, setBuildingPreset] = useState(false)
+  const [editingPreset, setEditingPreset]   = useState(null)
 
   // User preferences — persisted across visits
-  const [theme, setTheme]               = usePersistedState('lk_theme', 'light')
-  const [customLayouts, setCustomLayouts] = usePersistedState('lk_custom_layouts', loadLayouts())
+  const [theme, setTheme]             = usePersistedState('lk_theme', 'light')
+  const [presets, setPresets]         = usePersistedState('lk_presets', loadPresets())
 
   const editorRef = useRef(null)
 
   // Smart setters — changing paper/orientation/blockStyle deselects active preset
-  function handlePaper(v)       { setPaper(v);       setActiveLayoutId(null) }
-  function handleOrientation(v) { setOrientation(v); setActiveLayoutId(null) }
-  function handleBlockStyle(v)  { setBlockStyle(v);  setActiveLayoutId(null) }
+  function handlePaper(v)       { setPaper(v);       setActivePresetId(null) }
+  function handleOrientation(v) { setOrientation(v); setActivePresetId(null) }
+  function handleBlockStyle(v)  { setBlockStyle(v);  setActivePresetId(null) }
 
   // Selecting a preset applies its saved settings and switches template
-  function handleSelectLayout(id) {
-    if (!id) { setActiveLayoutId(null); setTemplate('Grid'); return }
-    const layout = customLayouts.find((l) => l.id === id)
-    if (!layout) return
-    setActiveLayoutId(id)
+  function handleSelectPreset(id) {
+    if (!id) { setActivePresetId(null); setTemplate('Grid'); return }
+    const preset = presets.find((p) => p.id === id)
+    if (!preset) return
+    setActivePresetId(id)
     setTemplate('Preset')
-    if (layout.paper)       setPaper(layout.paper)
-    if (layout.orientation) setOrientation(layout.orientation)
+    if (preset.paper)       setPaper(preset.paper)
+    if (preset.orientation) setOrientation(preset.orientation)
     setBlockStyle({
-      borderWidth: layout.borderWidth ?? 0,
-      borderColor: layout.borderColor ?? '#000000',
-      gap:         layout.gap         ?? 0,
+      borderWidth: preset.borderWidth ?? 0,
+      borderColor: preset.borderColor ?? '#000000',
+      gap:         preset.gap         ?? 0,
     })
   }
 
-  function handleCreateLayout() {
-    setEditingLayout(null)
-    setBuildingLayout(true)
+  function handleCreatePreset() {
+    setEditingPreset(null)
+    setBuildingPreset(true)
   }
 
-  function handleSaveLayout(layout) {
-    setCustomLayouts((prev) => {
-      const next = layout.id ? updateLayout(prev, layout) : createLayout(prev, layout)
-      setActiveLayoutId(layout.id ? layout.id : next[next.length - 1].id)
+  function handleSavePreset(preset) {
+    setPresets((prev) => {
+      const next = preset.id ? updatePreset(prev, preset) : createPreset(prev, preset)
+      setActivePresetId(preset.id ? preset.id : next[next.length - 1].id)
       return next
     })
     setTemplate('Preset')
-    setBuildingLayout(false)
-    setEditingLayout(null)
+    setBuildingPreset(false)
+    setEditingPreset(null)
   }
 
-  function handleDeleteLayout(id) {
-    setCustomLayouts((prev) => {
-      const next = deleteLayout(prev, id)
-      if (activeLayoutId === id) setActiveLayoutId(next[0]?.id ?? null)
+  function handleDeletePreset(id) {
+    setPresets((prev) => {
+      const next = deletePreset(prev, id)
+      if (activePresetId === id) setActivePresetId(next[0]?.id ?? null)
       return next
     })
   }
 
-  function handleEditLayout(id) {
-    const layout = customLayouts.find((l) => l.id === id)
-    if (!layout) return
-    setEditingLayout(layout)
-    setActiveLayoutId(id)
+  function handleEditPreset(id) {
+    const preset = presets.find((p) => p.id === id)
+    if (!preset) return
+    setEditingPreset(preset)
+    setActivePresetId(id)
     setTemplate('Preset')
-    if (layout.paper) setPaper(layout.paper)
-    if (layout.orientation) setOrientation(layout.orientation)
+    if (preset.paper)       setPaper(preset.paper)
+    if (preset.orientation) setOrientation(preset.orientation)
     setBlockStyle({
-      borderWidth: layout.borderWidth ?? 0,
-      borderColor: layout.borderColor ?? '#000000',
-      gap: layout.gap ?? 0,
+      borderWidth: preset.borderWidth ?? 0,
+      borderColor: preset.borderColor ?? '#000000',
+      gap:         preset.gap         ?? 0,
     })
-    setBuildingLayout(true)
+    setBuildingPreset(true)
   }
 
   function handleFiles(e) {
@@ -108,7 +108,7 @@ export default function App() {
         orientation={orientation}
         theme={theme}
         onTheme={setTheme}
-        disabled={buildingLayout}
+        disabled={buildingPreset}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -119,26 +119,26 @@ export default function App() {
           grid={grid} onGrid={setGrid}
           blockSize={blockSize} onBlockSize={setBlockSize}
           blockStyle={blockStyle} onBlockStyle={handleBlockStyle}
-          customLayouts={customLayouts}
-          activeLayoutId={activeLayoutId}
-          onSelectLayout={handleSelectLayout}
-          onCreateLayout={handleCreateLayout}
-          onEditLayout={handleEditLayout}
-          onDeleteLayout={handleDeleteLayout}
-          disabled={buildingLayout}
+          presets={presets}
+          activePresetId={activePresetId}
+          onSelectPreset={handleSelectPreset}
+          onCreatePreset={handleCreatePreset}
+          onEditPreset={handleEditPreset}
+          onDeletePreset={handleDeletePreset}
+          disabled={buildingPreset}
         />
 
         <main className="flex-1 overflow-y-auto flex flex-col items-center p-6">
-          {buildingLayout ? (
-            <LayoutBuilder
+          {buildingPreset ? (
+            <PresetBuilder
               paper={paper}
               orientation={orientation}
               borderWidth={blockStyle.borderWidth}
               borderColor={blockStyle.borderColor}
               gap={blockStyle.gap}
-              initialLayout={editingLayout}
-              onSave={handleSaveLayout}
-              onCancel={() => { setBuildingLayout(false); setEditingLayout(null) }}
+              initialPreset={editingPreset}
+              onSave={handleSavePreset}
+              onCancel={() => { setBuildingPreset(false); setEditingPreset(null) }}
             />
           ) : (
             <>
@@ -152,8 +152,8 @@ export default function App() {
                   grid={grid}
                   blockSize={blockSize}
                   blockStyle={blockStyle}
-                  customLayouts={customLayouts}
-                  activeLayoutId={activeLayoutId}
+                  presets={presets}
+                  activePresetId={activePresetId}
                 />
               </div>
               <p className="mt-4 text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -163,7 +163,7 @@ export default function App() {
           )}
         </main>
 
-        <ImagePanel images={images} onRemove={handleRemove} onFiles={handleFiles} disabled={buildingLayout} />
+        <ImagePanel images={images} onRemove={handleRemove} onFiles={handleFiles} disabled={buildingPreset} />
       </div>
     </div>
   )

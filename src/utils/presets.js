@@ -1,7 +1,7 @@
 /**
- * customLayouts.js
+ * presets.js
  *
- * Layout schema:
+ * Preset schema:
  * {
  *   id, name,
  *   paper, orientation,
@@ -10,7 +10,7 @@
  * }
  */
 
-export const SAMPLE_LAYOUTS = [
+export const SAMPLE_PRESETS = [
   {
     id: 'sample-1', name: '4 × 4 Grid',
     paper: 'A4', orientation: 'portrait',
@@ -33,19 +33,19 @@ export const SAMPLE_LAYOUTS = [
 
 export const IS_LOCAL = window.location.hostname === 'localhost'
 
-export function loadLayouts() {
-  return SAMPLE_LAYOUTS
+export function loadPresets() {
+  return SAMPLE_PRESETS
 }
 
-export function createLayout(layouts, layout) {
-  const next = [...layouts, { ...layout, id: `layout-${Date.now()}` }]
+export function createPreset(presets, preset) {
+  const next = [...presets, { ...preset, id: `preset-${Date.now()}` }]
   return next
 }
 
-export function updateLayout(layouts, updatedLayout) {
-  return layouts.map((layout) => layout.id === updatedLayout.id ? { ...layout, ...updatedLayout } : layout)
+export function updatePreset(presets, updatedPreset) {
+  return presets.map((preset) => preset.id === updatedPreset.id ? { ...preset, ...updatedPreset } : preset)
 }
 
-export function deleteLayout(layouts, id) {
-  return layouts.filter((l) => l.id !== id)
+export function deletePreset(presets, id) {
+  return presets.filter((p) => p.id !== id)
 }

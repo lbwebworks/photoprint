@@ -12,8 +12,8 @@ const CanvasEditor = forwardRef(function CanvasEditor(
     paper = 'A4',
     orientation = 'portrait',
     blockStyle = { borderWidth: 0, borderColor: '#000000', gap: 0 },
-    customLayouts = [],
-    activeLayoutId = null,
+    presets = [],
+    activePresetId = null,
   },
   ref
 ) {
@@ -35,12 +35,12 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   if (template === 'Free Size') {
     blocks = computeBlocksBySize(blockSize.w, blockSize.h, paper, orientation, blockStyle.gap)
   } else if (template === 'Preset') {
-    const layout = customLayouts.find((l) => l.id === activeLayoutId)
-    if (layout) {
+    const preset = presets.find((p) => p.id === activePresetId)
+    if (preset) {
       // Free-form blocks stored directly, or grid-derived if cols/rows set
-      blocks = layout.slots
-        ? layout.slots
-        : computeBlocksByGrid(layout.cols, layout.rows, paper, orientation, blockStyle.gap)
+      blocks = preset.slots
+        ? preset.slots
+        : computeBlocksByGrid(preset.cols, preset.rows, paper, orientation, blockStyle.gap)
     }
   } else {
     blocks = grid.mode === 'custom'

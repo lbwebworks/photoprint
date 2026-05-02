@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { GRID_OPTIONS, PAPER_SIZES, ORIENTATIONS, getUsable, mmToPx, pxToMm } from '../utils/layoutEngine'
-import { IS_LOCAL } from '../utils/customLayouts'
+import { IS_LOCAL } from '../utils/presets'
 
 const LAYOUTS = ['Grid', 'Free Size']
 const MIN_PX = mmToPx(10)
@@ -69,18 +69,18 @@ function SizeSlider({ label, value, max, onChange }) {
   )
 }
 
-export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, blockSize, onBlockSize, blockStyle, onBlockStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onEditLayout, onDeleteLayout, disabled = false }) {
+export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, blockSize, onBlockSize, blockStyle, onBlockStyle, presets, activePresetId, onSelectPreset, onCreatePreset, onEditPreset, onDeletePreset, disabled = false }) {
   const usable = getUsable(paper, orientation)
   const [presetsOpen, setPresetsOpen] = useState(false)
 
   function handleCreate() {
-    onCreateLayout()
+    onCreatePreset()
   }
 
   function handlePublish(l) {
     const snippet = `  { id: '${l.id}', name: '${l.name}', cols: ${l.cols}, rows: ${l.rows} },`
     navigator.clipboard.writeText(snippet)
-      .then(() => alert(`Copied to clipboard!\n\nPaste into SAMPLE_LAYOUTS in\nsrc/utils/customLayouts.js\n\n${snippet}`))
+      .then(() => alert(`Copied to clipboard!\n\nPaste into SAMPLE_PRESETS in\nsrc/utils/presets.js\n\n${snippet}`))
   }
 
   return (
@@ -94,7 +94,7 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
           className="flex items-center justify-between w-full text-xs focus:outline-none"
           style={{ color: 'var(--text-secondary)' }}
         >
-          <span>Presets {activeLayoutId && <span style={{ color: 'var(--text-muted)' }}>({customLayouts.find(l => l.id === activeLayoutId)?.name})</span>}</span>
+          <span>Presets {activePresetId && <span style={{ color: 'var(--text-muted)' }}>({presets.find(p => p.id === activePresetId)?.name})</span>}</span>
           <span>{presetsOpen ? '▲' : '▼'}</span>
         </button>
 
@@ -103,53 +103,66 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
             {/* Scrollable tile grid */}
             <div className="grid grid-cols-3 gap-1 overflow-y-auto" style={{ maxHeight: '200px' }}>
 
+              {/* Create Preset tile — always first */}
+              <div
+                onClick={handleCreate}
+                style={{
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-muted)',
+                }}
+                className="aspect-square rounded border border-dashed cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:text-indigo-500 hover:bg-[var(--bg-elevated)]"
+              >
+                <span className="text-lg leading-none">+</span>
+                <span className="text-[10px] font-medium leading-tight text-center px-1">Create Preset</span>
+              </div>
+
               {/* None tile */}
               <div
-                onClick={() => onSelectLayout(null)}
+                onClick={() => onSelectPreset(null)}
                 style={{
-                  background: !activeLayoutId ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                  borderColor: !activeLayoutId ? '#6366f1' : 'var(--border)',
-                  color: !activeLayoutId ? 'var(--text-primary)' : 'var(--text-muted)',
+                  background: !activePresetId ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                  borderColor: !activePresetId ? '#6366f1' : 'var(--border)',
+                  color: !activePresetId ? 'var(--text-primary)' : 'var(--text-muted)',
                 }}
                 className="aspect-square rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
               >
                 <span className="text-xs font-medium leading-tight text-center px-1">None</span>
               </div>
 
-              {customLayouts.map((l) => (
+              {presets.map((p) => (
                 <div
-                  key={l.id}
-                  onClick={() => onSelectLayout(l.id)}
+                  key={p.id}
+                  onClick={() => onSelectPreset(p.id)}
                   style={{
-                    background: activeLayoutId === l.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                    borderColor: activeLayoutId === l.id ? '#6366f1' : 'var(--border)',
+                    background: activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                    borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
                     color: 'var(--text-primary)',
                   }}
                   className="aspect-square rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 relative group hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
                 >
-                  <span className="text-xs font-medium leading-tight text-center px-1 line-clamp-2">{l.name}</span>
+                  <span className="text-xs font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
                   <span style={{ color: 'var(--text-muted)' }} className="text-[10px] leading-tight">
-                    {l.slots ? `${l.slots.length} blocks` : `${l.cols}×${l.rows}`}
+                    {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
                   </span>
 
                   {/* Action buttons — visible on hover */}
                   <div className="absolute top-0.5 right-0.5 hidden group-hover:flex gap-0.5">
                     {IS_LOCAL && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); handlePublish(l) }}
+                        onClick={(e) => { e.stopPropagation(); handlePublish(p) }}
                         className="text-[12px] px-2 py-1 hover:text-indigo-500 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm hover:shadow-lg cursor-pointer"
                         style={{ color: 'var(--text-muted)' }}
                         title="Publish"
                       >↑</button>
                     )}
                     <button
-                      onClick={(e) => { e.stopPropagation(); onEditLayout(l.id) }}
+                      onClick={(e) => { e.stopPropagation(); onEditPreset(p.id) }}
                       className="text-[12px] px-2 py-1 hover:text-slate-700 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm hover:shadow-lg cursor-pointer"
                       style={{ color: 'var(--text-muted)' }}
                       title="Edit"
                     >✎</button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); onDeleteLayout(l.id) }}
+                      onClick={(e) => { e.stopPropagation(); onDeletePreset(p.id) }}
                       className="text-[12px] px-2 py-1 hover:text-rose-500 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm hover:shadow-lg cursor-pointer"
                       style={{ color: 'var(--text-muted)' }}
                       title="Delete"
@@ -158,13 +171,6 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
                 </div>
               ))}
             </div>
-
-            <button
-              onClick={handleCreate}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium py-1.5 rounded transition"
-            >
-              + Create Layout
-            </button>
           </div>
         )}
       </div>
