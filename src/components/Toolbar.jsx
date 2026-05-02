@@ -69,7 +69,7 @@ function SizeSlider({ label, value, max, onChange }) {
   )
 }
 
-export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onDeleteLayout }) {
+export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onDeleteLayout, disabled = false }) {
   const usable = getUsable(paper, orientation)
   const [presetsOpen, setPresetsOpen] = useState(false)
 
@@ -85,7 +85,7 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
 
   return (
     <aside style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
-      className="w-[20%] min-w-48 shrink-0 border-r flex flex-col gap-4 p-4 overflow-y-auto">
+      className={`w-[20%] min-w-48 shrink-0 border-r flex flex-col gap-4 p-4 overflow-y-auto ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
 
       {/* Presets — collapsible, drives all controls below */}
       <div className="flex flex-col gap-1">

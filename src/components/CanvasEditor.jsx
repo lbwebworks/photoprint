@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { Stage, Layer, Rect } from 'react-konva'
-import Slot from './Slot'
+import Block from './Block'
 import { mmToPx, getPaperDims, computeSlots, computeSlotsByGrid, computeSlotsBySize, resolveSlotImages } from '../utils/layoutEngine'
 
 const CanvasEditor = forwardRef(function CanvasEditor(
@@ -64,7 +64,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
           <Layer>
             <Rect x={0} y={0} width={pageW} height={pageH} fill="white" />
             {slots.map((slot, i) => (
-              <Slot key={slot.id} slot={slot} url={slotUrls[i]} slotStyle={slotStyle} />
+              <Block key={slot.id} block={slot} url={slotUrls[i]} blockStyle={slotStyle} />
             ))}
           </Layer>
         </Stage>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Group, Rect, Image as KonvaImage } from 'react-konva'
 import { getFillScale, clampOffset } from '../utils/imageUtils'
 
-function SlotImage({ url, slotW, slotH }) {
+function BlockImage({ url, blockW, blockH }) {
   const [img, setImg] = useState(null)
   // zoom is a multiplier on top of fillScale (min 1 = no zoom-out below fill)
   const [zoom, setZoom] = useState(1)
@@ -20,16 +20,16 @@ function SlotImage({ url, slotW, slotH }) {
 
   if (!img) return null
 
-  // fillScale: minimum scale so image fully covers the slot (no empty space)
-  const fillScale = getFillScale(img.width, img.height, slotW, slotH)
+  // fillScale: minimum scale so image fully covers the block (no empty space)
+  const fillScale = getFillScale(img.width, img.height, blockW, blockH)
   const effectiveScale = fillScale * zoom
   const drawW = img.width * effectiveScale
   const drawH = img.height * effectiveScale
 
-  // Center the image in the slot, then apply user drag offset
-  const baseX = (slotW - drawW) / 2
-  const baseY = (slotH - drawH) / 2
-  const pos = clampOffset(baseX + offset.x, baseY + offset.y, drawW, drawH, slotW, slotH)
+  // Center the image in the block, then apply user drag offset
+  const baseX = (blockW - drawW) / 2
+  const baseY = (blockH - drawH) / 2
+  const pos = clampOffset(baseX + offset.x, baseY + offset.y, drawW, drawH, blockW, blockH)
 
   function handleWheel(e) {
     e.evt.preventDefault()
@@ -40,7 +40,7 @@ function SlotImage({ url, slotW, slotH }) {
 
   function handleDragMove(e) {
     const raw = e.target.position()
-    const clamped = clampOffset(raw.x, raw.y, drawW, drawH, slotW, slotH)
+    const clamped = clampOffset(raw.x, raw.y, drawW, drawH, blockW, blockH)
     e.target.position(clamped)
     setOffset({ x: clamped.x - baseX, y: clamped.y - baseY })
   }
@@ -59,18 +59,18 @@ function SlotImage({ url, slotW, slotH }) {
   )
 }
 
-export default function Slot({ slot, url, slotStyle }) {
-  const { borderWidth = 0, borderColor = '#000000' } = slotStyle || {}
+export default function Block({ block, url, blockStyle }) {
+  const { borderWidth = 0, borderColor = '#000000' } = blockStyle || {}
   return (
-    <Group x={slot.x} y={slot.y} clipX={0} clipY={0} clipWidth={slot.w} clipHeight={slot.h}>
+    <Group x={block.x} y={block.y} clipX={0} clipY={0} clipWidth={block.w} clipHeight={block.h}>
       <Rect
-        width={slot.w}
-        height={slot.h}
+        width={block.w}
+        height={block.h}
         fill={url ? '#fefeff' : '#f5f7fa'}
         stroke={borderWidth > 0 ? borderColor : '#c0c8d8'}
         strokeWidth={borderWidth > 0 ? borderWidth : 2}
       />
-      {url && <SlotImage url={url} slotW={slot.w} slotH={slot.h} />}
+      {url && <BlockImage url={url} blockW={block.w} blockH={block.h} />}
     </Group>
   )
 }

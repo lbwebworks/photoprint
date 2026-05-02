@@ -13,6 +13,10 @@
 
 export const mmToPx = (mm) => Math.round(mm * 300 / 25.4)
 export const pxToMm = (px) => (px * 25.4 / 300).toFixed(1)
+export const cmToPx = (cm) => Math.round(cm * 300 / 2.54)
+export const pxToCm = (px) => (px * 2.54 / 300).toFixed(2)
+export const inchToPx = (inch) => Math.round(inch * 300)
+export const pxToInch = (px) => (px / 300).toFixed(3)
 
 // 5mm margin at 300 DPI
 export const MARGIN = mmToPx(5)

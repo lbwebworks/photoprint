@@ -1,7 +1,7 @@
-export default function ImagePanel({ images, onRemove, onFiles }) {
+export default function ImagePanel({ images, onRemove, onFiles, disabled = false }) {
   return (
     <aside style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
-      className="w-[15%] min-w-40 shrink-0 border-l flex flex-col overflow-hidden">
+      className={`w-[15%] min-w-40 shrink-0 border-l flex flex-col overflow-hidden ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
 
       {/* Header */}
       <div style={{ borderColor: 'var(--border)' }} className="px-3 py-3 border-b flex flex-col gap-2">
@@ -13,7 +13,7 @@ export default function ImagePanel({ images, onRemove, onFiles }) {
         <label style={{ borderColor: 'var(--border)' }}
           className="cursor-pointer w-full text-center bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-2 py-1.5 rounded transition">
           Upload Photos
-          <input type="file" multiple accept="image/*" className="hidden" onChange={onFiles} />
+          <input type="file" multiple accept="image/*" className="hidden" onChange={onFiles} disabled={disabled} />
         </label>
       </div>
 

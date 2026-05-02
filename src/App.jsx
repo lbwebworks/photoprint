@@ -89,6 +89,7 @@ export default function App() {
         orientation={orientation}
         theme={theme}
         onTheme={setTheme}
+        disabled={buildingLayout}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -104,6 +105,7 @@ export default function App() {
           onSelectLayout={handleSelectLayout}
           onCreateLayout={handleCreateLayout}
           onDeleteLayout={handleDeleteLayout}
+          disabled={buildingLayout}
         />
 
         <main className="flex-1 overflow-y-auto flex flex-col items-center p-6">
@@ -140,7 +142,7 @@ export default function App() {
           )}
         </main>
 
-        <ImagePanel images={images} onRemove={handleRemove} onFiles={handleFiles} />
+        <ImagePanel images={images} onRemove={handleRemove} onFiles={handleFiles} disabled={buildingLayout} />
       </div>
     </div>
   )
