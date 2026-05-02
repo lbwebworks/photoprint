@@ -1,35 +1,55 @@
 /**
  * exportUtils.js
  *
- * Export the Konva stage at full paper resolution.
+ * Export the Konva stage(s) at full paper resolution.
  * pixelRatio = paperWidth / displayedWidth corrects for the preview scale,
  * ensuring the output is always the true DPI resolution regardless of screen size.
  */
 
 import { jsPDF } from 'jspdf'
-import { PAPER_SIZES, getPaperDims } from './layoutEngine'
+import { getPaperDims } from './layoutEngine'
 
-export function exportPNG(stageRef) {
+function stageToDataURL(stageRef) {
   const stage = stageRef.current
   const pixelRatio = stage.attrs.width / stage.width()
-  const dataURL = stage.toDataURL({ pixelRatio, mimeType: 'image/png' })
+  return stage.toDataURL({ pixelRatio, mimeType: 'image/png' })
+}
+
+/** Export the active (single) page as PNG */
+export function exportPNG(stageRef) {
+  const dataURL = stageToDataURL(stageRef)
   const link = document.createElement('a')
   link.download = 'print-layout.png'
   link.href = dataURL
   link.click()
 }
 
-export function exportPDF(stageRef, paperKey = 'A4', orientation = 'portrait') {
-  const stage = stageRef.current
-  const { width: pageW } = getPaperDims(paperKey, orientation)
-  const pixelRatio = pageW / stage.width()
-  const dataURL = stage.toDataURL({ pixelRatio, mimeType: 'image/png' })
+/** Export all pages as individual numbered PNGs */
+export function exportAllPNG(stageRefs) {
+  stageRefs.forEach((stageRef, i) => {
+    const dataURL = stageToDataURL(stageRef)
+    const link = document.createElement('a')
+    link.download = `print-layout-page-${i + 1}.png`
+    link.href = dataURL
+    link.click()
+  })
+}
 
-  // jsPDF orientation + format handles mm dimensions automatically
+/** Export all pages as a single multi-page PDF */
+export function exportPDF(stageRefs, paperKey = 'A4', orientation = 'portrait') {
+  if (!stageRefs.length) return
+
+  const { width: pageW } = getPaperDims(paperKey, orientation)
   const pdf = new jsPDF({ orientation, unit: 'mm', format: paperKey.toLowerCase() })
-  const [mmW, mmH] = orientation === 'landscape'
-    ? [pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight()]
-    : [pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight()]
-  pdf.addImage(dataURL, 'PNG', 0, 0, mmW, mmH)
+  const mmW = pdf.internal.pageSize.getWidth()
+  const mmH = pdf.internal.pageSize.getHeight()
+
+  stageRefs.forEach((stageRef, i) => {
+    const pixelRatio = pageW / stageRef.current.width()
+    const dataURL = stageRef.current.toDataURL({ pixelRatio, mimeType: 'image/png' })
+    if (i > 0) pdf.addPage(paperKey.toLowerCase(), orientation)
+    pdf.addImage(dataURL, 'PNG', 0, 0, mmW, mmH)
+  })
+
   pdf.save('print-layout.pdf')
 }

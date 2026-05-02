@@ -21,6 +21,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   {
     images = [],
     fillMode = 'none',
+    imageOffset = 0,             // images consumed by preceding pages
     template = 'Grid',
     grid = { mode: 'square', slots: 16, cols: 4, rows: 4 },
     blockSize = { w: mmToPx(35), h: mmToPx(45) },
@@ -30,6 +31,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
     presets = [],
     activePresetId = null,
     onSelectionChange = null,
+    onImagesChange = null,       // called with (hasImages: bool) when block image state changes
   },
   ref
 ) {
@@ -87,14 +89,24 @@ const CanvasEditor = forwardRef(function CanvasEditor(
 
   let autoUrls
   if (fillMode === 'autofill-all') {
-    autoUrls = resolveBlockImages(blocks, images)
+    autoUrls = resolveBlockImages(blocks, images, imageOffset)
   } else if (fillMode === 'autofill') {
-    autoUrls = resolveBlockImagesFill(blocks, images)
+    autoUrls = resolveBlockImagesFill(blocks, images, imageOffset)
   } else {
     autoUrls = blocks.map(() => null)
   }
 
   renderStateRef.current = { blocks, autoUrls, blockImages }
+
+  // Notify parent when block image state changes (for Clear Page enabled state)
+  const pageHasImages = blocks.some((b, i) => {
+    const override = blockImages[b.id]
+    return !!(override === undefined ? autoUrls[i] : (override || null))
+  })
+  useEffect(() => {
+    onImagesChange?.(pageHasImages)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageHasImages])
 
   const stageScale = containerWidth / pageW
 
@@ -188,6 +200,18 @@ const CanvasEditor = forwardRef(function CanvasEditor(
 
   useImperativeHandle(ref, () => ({
     stageRef,
+
+    getBlockCount() {
+      return renderStateRef.current.blocks.length
+    },
+
+    hasImages() {
+      const { blocks: b, autoUrls: au, blockImages: bi } = renderStateRef.current
+      return b.some((block, i) => {
+        const override = bi[block.id]
+        return !!(override === undefined ? au[i] : (override || null))
+      })
+    },
 
     hasSelection() {
       return selectedIds.size > 0

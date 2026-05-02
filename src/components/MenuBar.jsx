@@ -1,8 +1,35 @@
-import { exportPNG, exportPDF } from '../utils/exportUtils'
+import { exportPNG, exportPDF, exportAllPNG } from '../utils/exportUtils'
 
-export default function MenuBar({ editorRef, paper, orientation, theme, onTheme, disabled = false }) {
-  function handleExportPNG() { if (disabled) return; exportPNG(editorRef.current.stageRef) }
-  function handleExportPDF() { if (disabled) return; exportPDF(editorRef.current.stageRef, paper, orientation) }
+export default function MenuBar({ pages, editorRefs, paper, orientation, theme, onTheme, disabled = false }) {
+  function getActiveStageRef() {
+    // Find the first page ref that has a stageRef (active page)
+    for (const page of (pages ?? [])) {
+      const r = editorRefs?.current?.[page.id]?.current?.stageRef
+      if (r) return r
+    }
+    return null
+  }
+
+  function getAllStageRefs() {
+    return (pages ?? [])
+      .map((p) => editorRefs?.current?.[p.id]?.current?.stageRef)
+      .filter(Boolean)
+  }
+
+  function handleExportPNG() {
+    if (disabled) return
+    const refs = getAllStageRefs()
+    if (refs.length === 1) {
+      exportPNG(refs[0])
+    } else {
+      exportAllPNG(refs)
+    }
+  }
+
+  function handleExportPDF() {
+    if (disabled) return
+    exportPDF(getAllStageRefs(), paper, orientation)
+  }
 
   return (
     <div style={{ background: 'var(--bg-menubar)', borderColor: 'var(--border)' }}

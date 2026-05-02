@@ -127,19 +127,20 @@ export function computeBlocksBySize(blockW, blockH, paperKey, orientation, gap =
 /**
  * Auto-fill logic — "autofill-all":
  * Blocks are filled by cycling through images repeatedly until all blocks are filled.
- * e.g. 3 images, 8 blocks → [1,2,3,1,2,3,1,2]
+ * offset = number of images consumed by previous pages.
+ * e.g. offset=3, 3 images, 8 blocks → [4,5,6,4,5,6,4,5] (wraps within images array)
  */
-export function resolveBlockImages(blocks, images) {
+export function resolveBlockImages(blocks, images, offset = 0) {
   if (!images.length) return blocks.map(() => null)
-  return blocks.map((_, i) => images[i % images.length])
+  return blocks.map((_, i) => images[(offset + i) % images.length])
 }
 
 /**
  * Auto-fill logic — "autofill" (no repeat):
- * Each image is assigned to one block in order; remaining blocks get null.
- * e.g. 3 images, 8 blocks → [1,2,3,null,null,null,null,null]
+ * Each image is assigned to one block in order starting from offset; remaining blocks get null.
+ * e.g. offset=3, 5 images, 4 blocks → [img4, img5, null, null]
  */
-export function resolveBlockImagesFill(blocks, images) {
+export function resolveBlockImagesFill(blocks, images, offset = 0) {
   if (!images.length) return blocks.map(() => null)
-  return blocks.map((_, i) => images[i] ?? null)
+  return blocks.map((_, i) => images[offset + i] ?? null)
 }

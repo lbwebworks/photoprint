@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import './index.css'
 import MenuBar from './components/MenuBar'
 import Toolbar from './components/Toolbar'
@@ -8,6 +8,8 @@ import ImagePanel from './components/ImagePanel'
 import { mmToPx, PAPER_SIZES, getPaperDims } from './utils/layoutEngine'
 import { loadPresets, createPreset, updatePreset, deletePreset } from './utils/presets'
 import { usePersistedState } from './utils/usePersistedState'
+
+function makePageId() { return `page-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }
 
 export default function App() {
   // Session settings — reset on every visit
@@ -23,12 +25,26 @@ export default function App() {
   const [editingPreset, setEditingPreset]   = useState(null)
   const [fillMode, setFillMode]             = useState('none')
   const [selectedCount, setSelectedCount]   = useState(0)
+  const [activePageHasImages, setActivePageHasImages] = useState(false)
+
+  // Multi-page state
+  const initialPageId = useRef(makePageId())
+  const [pages, setPages]           = useState([{ id: initialPageId.current }])
+  const [activePageId, setActivePageId] = useState(initialPageId.current)
+
+  // One ref per page, keyed by page id
+  const editorRefs = useRef({})
+  const getEditorRef = useCallback((id) => {
+    if (!editorRefs.current[id]) editorRefs.current[id] = { current: null }
+    return editorRefs.current[id]
+  }, [])
+
+  // Active editor ref shorthand
+  const activeRef = () => editorRefs.current[activePageId]
 
   // User preferences — persisted across visits
   const [theme, setTheme]             = usePersistedState('lk_theme', 'light')
   const [presets, setPresets]         = usePersistedState('lk_presets', loadPresets())
-
-  const editorRef = useRef(null)
 
   // Smart setters — changing paper/orientation/blockStyle deselects active preset
   function handlePaper(v)       { setPaper(v);       setActivePresetId(null) }
@@ -96,16 +112,49 @@ export default function App() {
     setImages((prev) => [...prev, ...urls])
   }
 
-  function handleRemove(index) {
+  function handleRemoveImage(index) {
     setImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function handleAddPage() {
+    const id = makePageId()
+    setPages((prev) => [...prev, { id }])
+    setActivePageId(id)
+    setActivePageHasImages(false)
+    setSelectedCount(0)
+  }
+
+  function handleRemovePage(id) {
+    setPages((prev) => {
+      if (prev.length === 1) return prev
+      const next = prev.filter((p) => p.id !== id)
+      if (activePageId === id) {
+        const removedIndex = prev.findIndex((p) => p.id === id)
+        setActivePageId(next[Math.min(removedIndex, next.length - 1)].id)
+      }
+      // Clean up the ref
+      delete editorRefs.current[id]
+      return next
+    })
   }
 
   const { width, height } = getPaperDims(paper, orientation)
 
+  // Export helpers — passed to MenuBar
+  const exportRef = {
+    current: {
+      stageRef: activeRef()?.current?.stageRef,
+      // For PDF export we need all stage refs in order
+      allStageRefs: pages.map((p) => editorRefs.current[p.id]?.current?.stageRef),
+    }
+  }
+
   return (
     <div className={`${theme} h-screen flex flex-col overflow-hidden`} style={{ background: 'var(--bg-base)' }}>
       <MenuBar
-        editorRef={editorRef}
+        editorRef={exportRef}
+        pages={pages}
+        editorRefs={editorRefs}
         paper={paper}
         orientation={orientation}
         theme={theme}
@@ -160,53 +209,118 @@ export default function App() {
                   </select>
                 </div>
                 <button
-                  onClick={() => { editorRef.current?.clearAll(); setFillMode('none'); setSelectedCount(0) }}
+                  onClick={() => { activeRef()?.current?.clearAll(); setFillMode('none'); setSelectedCount(0) }}
+                  disabled={!activePageHasImages}
                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
+                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Clear All
+                  Clear Page
                 </button>
                 <button
                   disabled={selectedCount === 0}
-                  onClick={() => { editorRef.current?.clearSelected(); setSelectedCount(0) }}
+                  onClick={() => { activeRef()?.current?.clearSelected(); setSelectedCount(0) }}
                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                   className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Clear
                 </button>
                 <button
-                  onClick={() => editorRef.current?.shuffle()}
+                  onClick={() => activeRef()?.current?.shuffle()}
                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                   className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
                 >
                   Shuffle
                 </button>
+                <button
+                  onClick={handleAddPage}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80 ml-auto"
+                >
+                  + Add Page
+                </button>
               </div>
 
-              <div className="w-full max-w-2xl shadow-2xl">
-                <CanvasEditor
-                  ref={editorRef}
-                  images={images}
-                  fillMode={fillMode}
-                  paper={paper}
-                  orientation={orientation}
-                  template={template}
-                  grid={grid}
-                  blockSize={blockSize}
-                  blockStyle={blockStyle}
-                  presets={presets}
-                  activePresetId={activePresetId}
-                  onSelectionChange={setSelectedCount}
-                />
+              {/* Pages */}
+              <div className="flex flex-col gap-8 w-full max-w-2xl">
+                {pages.map((page, index) => {
+                  // Compute how many images preceding pages consume for fill offset
+                  const imageOffset = pages.slice(0, index).reduce((sum, p) => {
+                    return sum + (editorRefs.current[p.id]?.current?.getBlockCount?.() ?? 0)
+                  }, 0)
+
+                  return (
+                  <div key={page.id} className="flex flex-col gap-2">
+                    {/* Page tab */}
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => {
+                          setActivePageId(page.id)
+                          setSelectedCount(0)
+                          setActivePageHasImages(editorRefs.current[page.id]?.current?.hasImages?.() ?? false)
+                        }}
+                        className="flex items-center gap-2 text-xs font-medium px-2 py-1 rounded transition"
+                        style={{
+                          color: activePageId === page.id ? '#6366f1' : 'var(--text-muted)',
+                          background: activePageId === page.id ? 'rgba(99,102,241,0.08)' : 'transparent',
+                        }}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ background: activePageId === page.id ? '#6366f1' : 'var(--border)' }}
+                        />
+                        Page {index + 1}
+                      </button>
+                      {pages.length > 1 && (
+                        <button
+                          onClick={() => handleRemovePage(page.id)}
+                          title="Remove page"
+                          style={{ color: 'var(--text-muted)' }}
+                          className="text-xs w-5 h-5 flex items-center justify-center rounded hover:text-rose-500 transition"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Canvas */}
+                    <div
+                      className="shadow-2xl"
+                      style={{ outline: activePageId === page.id ? '2px solid #6366f1' : '2px solid transparent', borderRadius: 2 }}
+                      onClick={() => setActivePageId(page.id)}
+                    >
+                      <CanvasEditor
+                        ref={getEditorRef(page.id)}
+                        images={images}
+                        fillMode={fillMode}
+                        imageOffset={imageOffset}
+                        paper={paper}
+                        orientation={orientation}
+                        template={template}
+                        grid={grid}
+                        blockSize={blockSize}
+                        blockStyle={blockStyle}
+                        presets={presets}
+                        activePresetId={activePresetId}
+                        onSelectionChange={(count) => {
+                          if (page.id === activePageId) setSelectedCount(count)
+                        }}
+                        onImagesChange={(has) => {
+                          if (page.id === activePageId) setActivePageHasImages(has)
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                      {`${width} × ${height} px — ${PAPER_SIZES[paper].label} ${orientation} @ 300 DPI`}
+                    </p>
+                  </div>
+                  )
+                })}
               </div>
-              <p className="mt-4 text-xs" style={{ color: 'var(--text-muted)' }}>
-                {`${width} × ${height} px — ${PAPER_SIZES[paper].label} ${orientation} @ 300 DPI`}
-              </p>
             </>
           )}
         </main>
 
-        <ImagePanel images={images} onRemove={handleRemove} onFiles={handleFiles} disabled={buildingPreset} />
+        <ImagePanel images={images} onRemove={handleRemoveImage} onFiles={handleFiles} disabled={buildingPreset} />
       </div>
     </div>
   )
