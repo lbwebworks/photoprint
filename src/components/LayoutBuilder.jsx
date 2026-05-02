@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { Stage, Layer, Rect, Transformer } from 'react-konva'
-import { getPaperDims, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm } from '../utils/layoutEngine'
+import { getPaperDims, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm, computeSlotsByGrid } from '../utils/layoutEngine'
 
 const DEFAULT_BLOCK_W = 400
 const DEFAULT_BLOCK_H = 400
@@ -77,7 +77,7 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, pageW, pageH, k
   )
 }
 
-export default function LayoutBuilder({ paper, orientation, borderWidth, borderColor, gap, onSave, onCancel }) {
+export default function LayoutBuilder({ paper, orientation, borderWidth, borderColor, gap, onSave, onCancel, initialLayout = null }) {
   const containerRef = useRef(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [blocks, setBlocks] = useState([])
@@ -86,6 +86,23 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
   const [unit, setUnit] = useState('px')
   const [freeForm, setFreeForm] = useState(false)
   const [showBlockActions, setShowBlockActions] = useState(false)
+
+  useEffect(() => {
+    if (!initialLayout) {
+      setBlocks([])
+      setName('')
+      setSelectedId(null)
+      return
+    }
+
+    const layoutSlots = initialLayout.slots
+      ? initialLayout.slots
+      : computeSlotsByGrid(initialLayout.cols, initialLayout.rows, paper, orientation, initialLayout.gap ?? gap)
+
+    setBlocks(layoutSlots)
+    setName(initialLayout.name || '')
+    setSelectedId(layoutSlots[0]?.id ?? null)
+  }, [initialLayout, paper, orientation, gap])
 
   const formatDisplayValue = (px) => {
     switch (unit) {
@@ -173,6 +190,7 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
     if (!name.trim()) { alert('Please enter a layout name.'); return }
     if (blocks.length === 0) { alert('Please add at least one block.'); return }
     onSave({
+      ...(initialLayout?.id ? { id: initialLayout.id } : {}),
       name: name.trim(),
       paper, orientation,
       borderWidth, borderColor, gap,

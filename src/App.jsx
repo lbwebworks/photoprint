@@ -6,7 +6,7 @@ import CanvasEditor from './components/CanvasEditor'
 import LayoutBuilder from './components/LayoutBuilder'
 import ImagePanel from './components/ImagePanel'
 import { mmToPx, PAPER_SIZES, getPaperDims } from './utils/layoutEngine'
-import { loadLayouts, createLayout, deleteLayout } from './utils/customLayouts'
+import { loadLayouts, createLayout, updateLayout, deleteLayout } from './utils/customLayouts'
 import { usePersistedState } from './utils/usePersistedState'
 
 export default function App() {
@@ -20,6 +20,7 @@ export default function App() {
   const [slotStyle, setSlotStyle]       = useState({ borderWidth: 0, borderColor: '#000000', gap: 0 })
   const [activeLayoutId, setActiveLayoutId] = useState(null)
   const [buildingLayout, setBuildingLayout] = useState(false)
+  const [editingLayout, setEditingLayout] = useState(null)
 
   // User preferences — persisted across visits
   const [theme, setTheme]               = usePersistedState('lk_theme', 'light')
@@ -49,17 +50,19 @@ export default function App() {
   }
 
   function handleCreateLayout() {
+    setEditingLayout(null)
     setBuildingLayout(true)
   }
 
   function handleSaveLayout(layout) {
     setCustomLayouts((prev) => {
-      const next = createLayout(prev, layout)
-      setActiveLayoutId(next[next.length - 1].id)
+      const next = layout.id ? updateLayout(prev, layout) : createLayout(prev, layout)
+      setActiveLayoutId(layout.id ? layout.id : next[next.length - 1].id)
       return next
     })
     setTemplate('Custom Layout')
     setBuildingLayout(false)
+    setEditingLayout(null)
   }
 
   function handleDeleteLayout(id) {
@@ -68,6 +71,22 @@ export default function App() {
       if (activeLayoutId === id) setActiveLayoutId(next[0]?.id ?? null)
       return next
     })
+  }
+
+  function handleEditLayout(id) {
+    const layout = customLayouts.find((l) => l.id === id)
+    if (!layout) return
+    setEditingLayout(layout)
+    setActiveLayoutId(id)
+    setTemplate('Custom Layout')
+    if (layout.paper) setPaper(layout.paper)
+    if (layout.orientation) setOrientation(layout.orientation)
+    setSlotStyle({
+      borderWidth: layout.borderWidth ?? 0,
+      borderColor: layout.borderColor ?? '#000000',
+      gap: layout.gap ?? 0,
+    })
+    setBuildingLayout(true)
   }
 
   function handleFiles(e) {
@@ -104,6 +123,7 @@ export default function App() {
           activeLayoutId={activeLayoutId}
           onSelectLayout={handleSelectLayout}
           onCreateLayout={handleCreateLayout}
+          onEditLayout={handleEditLayout}
           onDeleteLayout={handleDeleteLayout}
           disabled={buildingLayout}
         />
@@ -116,8 +136,9 @@ export default function App() {
               borderWidth={slotStyle.borderWidth}
               borderColor={slotStyle.borderColor}
               gap={slotStyle.gap}
+              initialLayout={editingLayout}
               onSave={handleSaveLayout}
-              onCancel={() => setBuildingLayout(false)}
+              onCancel={() => { setBuildingLayout(false); setEditingLayout(null) }}
             />
           ) : (
             <>

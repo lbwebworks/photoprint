@@ -42,6 +42,10 @@ export function createLayout(layouts, layout) {
   return next
 }
 
+export function updateLayout(layouts, updatedLayout) {
+  return layouts.map((layout) => layout.id === updatedLayout.id ? { ...layout, ...updatedLayout } : layout)
+}
+
 export function deleteLayout(layouts, id) {
   return layouts.filter((l) => l.id !== id)
 }

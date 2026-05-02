@@ -69,7 +69,7 @@ function SizeSlider({ label, value, max, onChange }) {
   )
 }
 
-export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onDeleteLayout, disabled = false }) {
+export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onEditLayout, onDeleteLayout, disabled = false }) {
   const usable = getUsable(paper, orientation)
   const [presetsOpen, setPresetsOpen] = useState(false)
 
@@ -137,14 +137,20 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
                     {IS_LOCAL && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handlePublish(l) }}
-                        className="text-[10px] hover:text-indigo-500 transition leading-none"
+                        className="text-[12px] px-2 py-1 hover:text-indigo-500 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm hover:shadow-lg cursor-pointer"
                         style={{ color: 'var(--text-muted)' }}
                         title="Publish"
                       >↑</button>
                     )}
                     <button
+                      onClick={(e) => { e.stopPropagation(); onEditLayout(l.id) }}
+                      className="text-[12px] px-2 py-1 hover:text-slate-700 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm hover:shadow-lg cursor-pointer"
+                      style={{ color: 'var(--text-muted)' }}
+                      title="Edit"
+                    >✎</button>
+                    <button
                       onClick={(e) => { e.stopPropagation(); onDeleteLayout(l.id) }}
-                      className="text-[10px] hover:text-rose-500 transition leading-none"
+                      className="text-[12px] px-2 py-1 hover:text-rose-500 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm hover:shadow-lg cursor-pointer"
                       style={{ color: 'var(--text-muted)' }}
                       title="Delete"
                     >✕</button>
