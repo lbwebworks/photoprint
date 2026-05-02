@@ -69,7 +69,7 @@ function SizeSlider({ label, value, max, onChange }) {
   )
 }
 
-export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, slotSize, onSlotSize, slotStyle, onSlotStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onEditLayout, onDeleteLayout, disabled = false }) {
+export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, blockSize, onBlockSize, blockStyle, onBlockStyle, customLayouts, activeLayoutId, onSelectLayout, onCreateLayout, onEditLayout, onDeleteLayout, disabled = false }) {
   const usable = getUsable(paper, orientation)
   const [presetsOpen, setPresetsOpen] = useState(false)
 
@@ -129,7 +129,7 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
                 >
                   <span className="text-xs font-medium leading-tight text-center px-1 line-clamp-2">{l.name}</span>
                   <span style={{ color: 'var(--text-muted)' }} className="text-[10px] leading-tight">
-                    {l.slots ? `${l.slots.length} slots` : `${l.cols}×${l.rows}`}
+                    {l.slots ? `${l.slots.length} blocks` : `${l.cols}×${l.rows}`}
                   </span>
 
                   {/* Action buttons — visible on hover */}
@@ -185,7 +185,7 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
 
       <Divider />
 
-      {/* Slot style controls */}
+      {/* Block style controls */}
       <div className="flex flex-col gap-3">
         <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Border</span>
 
@@ -197,8 +197,8 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
                 type="number"
                 min={0}
                 max={20}
-                value={slotStyle.borderWidth}
-                onChange={(e) => onSlotStyle({ ...slotStyle, borderWidth: Math.max(0, Number(e.target.value)) })}
+                value={blockStyle.borderWidth}
+                onChange={(e) => onBlockStyle({ ...blockStyle, borderWidth: Math.max(0, Number(e.target.value)) })}
                 style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
                 className="w-14 text-xs px-2 py-1 rounded border focus:outline-none text-right"
               />
@@ -206,8 +206,8 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
             </div>
           </div>
           <input
-            type="range" min={0} max={20} value={slotStyle.borderWidth}
-            onChange={(e) => onSlotStyle({ ...slotStyle, borderWidth: Number(e.target.value) })}
+            type="range" min={0} max={20} value={blockStyle.borderWidth}
+            onChange={(e) => onBlockStyle({ ...blockStyle, borderWidth: Number(e.target.value) })}
             className="w-full accent-indigo-500 cursor-pointer"
           />
         </div>
@@ -217,14 +217,14 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={slotStyle.borderColor}
-              onChange={(e) => onSlotStyle({ ...slotStyle, borderColor: e.target.value })}
+              value={blockStyle.borderColor}
+              onChange={(e) => onBlockStyle({ ...blockStyle, borderColor: e.target.value })}
               className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent"
             />
             <input
               type="text"
-              value={slotStyle.borderColor}
-              onChange={(e) => onSlotStyle({ ...slotStyle, borderColor: e.target.value })}
+              value={blockStyle.borderColor}
+              onChange={(e) => onBlockStyle({ ...blockStyle, borderColor: e.target.value })}
               style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
               className="flex-1 text-xs px-2 py-1 rounded border focus:outline-none"
             />
@@ -239,8 +239,8 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
                 type="number"
                 min={0}
                 max={200}
-                value={slotStyle.gap}
-                onChange={(e) => onSlotStyle({ ...slotStyle, gap: Math.max(0, Number(e.target.value)) })}
+                value={blockStyle.gap}
+                onChange={(e) => onBlockStyle({ ...blockStyle, gap: Math.max(0, Number(e.target.value)) })}
                 style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
                 className="w-14 text-xs px-2 py-1 rounded border focus:outline-none text-right"
               />
@@ -248,8 +248,8 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
             </div>
           </div>
           <input
-            type="range" min={0} max={200} value={slotStyle.gap}
-            onChange={(e) => onSlotStyle({ ...slotStyle, gap: Number(e.target.value) })}
+            type="range" min={0} max={200} value={blockStyle.gap}
+            onChange={(e) => onBlockStyle({ ...blockStyle, gap: Number(e.target.value) })}
             className="w-full accent-indigo-500 cursor-pointer"
           />
         </div>
@@ -267,7 +267,7 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
         <div className="flex flex-col gap-3">
           {/* Square presets dropdown */}
           <LabeledSelect
-            label="Slots"
+            label="Blocks"
             value={grid.mode === 'square' ? grid.slots : 'custom'}
             onChange={(e) => {
               const v = e.target.value
@@ -282,7 +282,7 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
           >
             <option value="custom">Custom…</option>
             {GRID_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n} slot{n !== 1 ? 's' : ''}</option>
+              <option key={n} value={n}>{n} block{n !== 1 ? 's' : ''}</option>
             ))}
           </LabeledSelect>
 
@@ -310,7 +310,7 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
                 </div>
               </div>
               <span style={{ color: 'var(--text-muted)' }} className="text-xs text-center">
-                {grid.cols} × {grid.rows} = {grid.cols * grid.rows} slots
+                {grid.cols} × {grid.rows} = {grid.cols * grid.rows} blocks
               </span>
             </div>
           )}
@@ -320,8 +320,8 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
       {template === 'Free Size' && (
         <>
           <Divider />
-          <SizeSlider label="Width"  value={slotSize.w} max={usable.w} onChange={(v) => onSlotSize({ ...slotSize, w: v })} />
-          <SizeSlider label="Height" value={slotSize.h} max={usable.h} onChange={(v) => onSlotSize({ ...slotSize, h: v })} />
+          <SizeSlider label="Width"  value={blockSize.w} max={usable.w} onChange={(v) => onBlockSize({ ...blockSize, w: v })} />
+          <SizeSlider label="Height" value={blockSize.h} max={usable.h} onChange={(v) => onBlockSize({ ...blockSize, h: v })} />
         </>
       )}
     </aside>

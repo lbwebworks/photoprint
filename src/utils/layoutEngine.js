@@ -9,6 +9,8 @@
  *   A5 = 148 × 210 mm = 1748 × 2480 px
  *
  * MARGIN = 5mm ≈ 59px — applied on all sides for both paper sizes.
+ *
+ * Terminology: individual photo areas are called "blocks".
  */
 
 export const mmToPx = (mm) => Math.round(mm * 300 / 25.4)
@@ -26,7 +28,7 @@ export const PAPER_SIZES = {
   A5: { label: 'A5', width: mmToPx(148), height: mmToPx(210) },
 }
 
-// Grid options as slot counts (square numbers 1x1 → 12x12)
+// Grid options as block counts (square numbers 1x1 → 12x12)
 export const GRID_OPTIONS = [1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144]
 
 export const ORIENTATIONS = [
@@ -53,81 +55,81 @@ export function getUsable(paperKey, orientation) {
 
 /**
  * Template: Grid (square)
- * NxN equal slots that fill the usable area exactly, with optional gap.
+ * NxN equal blocks that fill the usable area exactly, with optional gap.
  */
-export function computeSlots(n, paperKey, orientation, gap = 0) {
+export function computeBlocks(n, paperKey, orientation, gap = 0) {
   const { w: usableW, h: usableH } = getUsable(paperKey, orientation)
-  const slotW = (usableW - gap * (n - 1)) / n
-  const slotH = (usableH - gap * (n - 1)) / n
+  const blockW = (usableW - gap * (n - 1)) / n
+  const blockH = (usableH - gap * (n - 1)) / n
 
-  const slots = []
+  const blocks = []
   for (let r = 0; r < n; r++)
     for (let c = 0; c < n; c++)
-      slots.push({
+      blocks.push({
         id: `${r}-${c}`,
-        x: MARGIN + c * (slotW + gap),
-        y: MARGIN + r * (slotH + gap),
-        w: slotW,
-        h: slotH,
+        x: MARGIN + c * (blockW + gap),
+        y: MARGIN + r * (blockH + gap),
+        w: blockW,
+        h: blockH,
       })
-  return slots
+  return blocks
 }
 
 /**
  * Template: Grid (custom cols × rows)
  * Fills the usable area with the given col/row count, with optional gap.
  */
-export function computeSlotsByGrid(cols, rows, paperKey, orientation, gap = 0) {
+export function computeBlocksByGrid(cols, rows, paperKey, orientation, gap = 0) {
   const { w: usableW, h: usableH } = getUsable(paperKey, orientation)
-  const slotW = (usableW - gap * (cols - 1)) / cols
-  const slotH = (usableH - gap * (rows - 1)) / rows
+  const blockW = (usableW - gap * (cols - 1)) / cols
+  const blockH = (usableH - gap * (rows - 1)) / rows
 
-  const slots = []
+  const blocks = []
   for (let r = 0; r < rows; r++)
     for (let c = 0; c < cols; c++)
-      slots.push({
+      blocks.push({
         id: `${r}-${c}`,
-        x: MARGIN + c * (slotW + gap),
-        y: MARGIN + r * (slotH + gap),
-        w: slotW,
-        h: slotH,
+        x: MARGIN + c * (blockW + gap),
+        y: MARGIN + r * (blockH + gap),
+        w: blockW,
+        h: blockH,
       })
-  return slots
+  return blocks
 }
 
 /**
  * Template: Free Size
- * Pack as many slotW × slotH slots as fit in the usable area, with optional gap.
+ * Pack as many blockW × blockH blocks as fit in the usable area, with optional gap.
  * Remaining space is split evenly (centered grid).
  */
-export function computeSlotsBySize(slotW, slotH, paperKey, orientation, gap = 0) {
+export function computeBlocksBySize(blockW, blockH, paperKey, orientation, gap = 0) {
   const { w: usableW, h: usableH } = getUsable(paperKey, orientation)
-  const cols = Math.max(1, Math.floor((usableW + gap) / (slotW + gap)))
-  const rows = Math.max(1, Math.floor((usableH + gap) / (slotH + gap)))
-  const gridW = cols * slotW + (cols - 1) * gap
-  const gridH = rows * slotH + (rows - 1) * gap
+  const cols = Math.max(1, Math.floor((usableW + gap) / (blockW + gap)))
+  const rows = Math.max(1, Math.floor((usableH + gap) / (blockH + gap)))
+  const gridW = cols * blockW + (cols - 1) * gap
+  const gridH = rows * blockH + (rows - 1) * gap
   const offsetX = MARGIN + Math.round((usableW - gridW) / 2)
   const offsetY = MARGIN + Math.round((usableH - gridH) / 2)
 
-  const slots = []
+  const blocks = []
   for (let r = 0; r < rows; r++)
     for (let c = 0; c < cols; c++)
-      slots.push({
+      blocks.push({
         id: `${r}-${c}`,
-        x: offsetX + c * (slotW + gap),
-        y: offsetY + r * (slotH + gap),
-        w: slotW,
-        h: slotH,
+        x: offsetX + c * (blockW + gap),
+        y: offsetY + r * (blockH + gap),
+        w: blockW,
+        h: blockH,
       })
-  return slots
+  return blocks
 }
 
 /**
  * Auto-fill logic:
- * - Slots are filled by cycling through images repeatedly until all slots are filled.
- * - e.g. 3 images, 8 slots → [1,2,3,1,2,3,1,2]
+ * - Blocks are filled by cycling through images repeatedly until all blocks are filled.
+ * - e.g. 3 images, 8 blocks → [1,2,3,1,2,3,1,2]
  */
-export function resolveSlotImages(slots, images) {
-  if (!images.length) return slots.map(() => null)
-  return slots.map((_, i) => images[i % images.length])
+export function resolveBlockImages(blocks, images) {
+  if (!images.length) return blocks.map(() => null)
+  return blocks.map((_, i) => images[i % images.length])
 }

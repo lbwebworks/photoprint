@@ -1,17 +1,17 @@
 import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { Stage, Layer, Rect } from 'react-konva'
 import Block from './Block'
-import { mmToPx, getPaperDims, computeSlots, computeSlotsByGrid, computeSlotsBySize, resolveSlotImages } from '../utils/layoutEngine'
+import { mmToPx, getPaperDims, computeBlocks, computeBlocksByGrid, computeBlocksBySize, resolveBlockImages } from '../utils/layoutEngine'
 
 const CanvasEditor = forwardRef(function CanvasEditor(
   {
     images = [],
     template = 'Grid',
     grid = { mode: 'square', slots: 16, cols: 4, rows: 4 },
-    slotSize = { w: mmToPx(35), h: mmToPx(45) },
+    blockSize = { w: mmToPx(35), h: mmToPx(45) },
     paper = 'A4',
     orientation = 'portrait',
-    slotStyle = { borderWidth: 0, borderColor: '#000000', gap: 0 },
+    blockStyle = { borderWidth: 0, borderColor: '#000000', gap: 0 },
     customLayouts = [],
     activeLayoutId = null,
   },
@@ -31,24 +31,24 @@ const CanvasEditor = forwardRef(function CanvasEditor(
 
   const { width: pageW, height: pageH } = getPaperDims(paper, orientation)
 
-  let slots = []
+  let blocks = []
   if (template === 'Free Size') {
-    slots = computeSlotsBySize(slotSize.w, slotSize.h, paper, orientation, slotStyle.gap)
-  } else if (template === 'Custom Layout') {
+    blocks = computeBlocksBySize(blockSize.w, blockSize.h, paper, orientation, blockStyle.gap)
+  } else if (template === 'Preset') {
     const layout = customLayouts.find((l) => l.id === activeLayoutId)
     if (layout) {
-      // Free-form slots stored directly, or grid-derived if cols/rows set
-      slots = layout.slots
+      // Free-form blocks stored directly, or grid-derived if cols/rows set
+      blocks = layout.slots
         ? layout.slots
-        : computeSlotsByGrid(layout.cols, layout.rows, paper, orientation, slotStyle.gap)
+        : computeBlocksByGrid(layout.cols, layout.rows, paper, orientation, blockStyle.gap)
     }
   } else {
-    slots = grid.mode === 'custom'
-      ? computeSlotsByGrid(grid.cols, grid.rows, paper, orientation, slotStyle.gap)
-      : computeSlots(Math.round(Math.sqrt(grid.slots)), paper, orientation, slotStyle.gap)
+    blocks = grid.mode === 'custom'
+      ? computeBlocksByGrid(grid.cols, grid.rows, paper, orientation, blockStyle.gap)
+      : computeBlocks(Math.round(Math.sqrt(grid.slots)), paper, orientation, blockStyle.gap)
   }
 
-  const slotUrls = resolveSlotImages(slots, images)
+  const blockUrls = resolveBlockImages(blocks, images)
   const stageScale = containerWidth / pageW
 
   return (
@@ -63,8 +63,8 @@ const CanvasEditor = forwardRef(function CanvasEditor(
         >
           <Layer>
             <Rect x={0} y={0} width={pageW} height={pageH} fill="white" />
-            {slots.map((slot, i) => (
-              <Block key={slot.id} block={slot} url={slotUrls[i]} blockStyle={slotStyle} />
+            {blocks.map((block, i) => (
+              <Block key={block.id} block={block} url={blockUrls[i]} blockStyle={blockStyle} />
             ))}
           </Layer>
         </Stage>

@@ -1,12 +1,12 @@
 /**
  * imageUtils.js
  *
- * Fill scaling: image must always cover the slot entirely — no empty space.
- * scale = max(slotW / imgW, slotH / imgH)
+ * Fill scaling: image must always cover the block entirely — no empty space.
+ * scale = max(blockW / imgW, blockH / imgH)
  * This is the minimum scale allowed; user zoom multiplies on top of it.
  *
- * Clamp offset: after scaling, the image may be larger than the slot.
- * We restrict the drag offset so no edge of the slot is ever exposed.
+ * Clamp offset: after scaling, the image may be larger than the block.
+ * We restrict the drag offset so no edge of the block is ever exposed.
  */
 
 /**

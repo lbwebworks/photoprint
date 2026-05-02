@@ -15,7 +15,7 @@ export const SAMPLE_LAYOUTS = [
     id: 'sample-1', name: '4 × 4 Grid',
     paper: 'A4', orientation: 'portrait',
     borderWidth: 0, borderColor: '#000000', gap: 0,
-    slots: null, cols: 4, rows: 4, // null slots = use computeSlotsByGrid
+    slots: null, cols: 4, rows: 4, // null slots = use computeBlocksByGrid
   },
   {
     id: 'sample-2', name: '4 × 5 Grid',

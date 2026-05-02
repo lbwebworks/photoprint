@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { Stage, Layer, Rect, Transformer } from 'react-konva'
-import { getPaperDims, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm, computeSlotsByGrid } from '../utils/layoutEngine'
+import { getPaperDims, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm, computeBlocksByGrid } from '../utils/layoutEngine'
 
 const DEFAULT_BLOCK_W = 400
 const DEFAULT_BLOCK_H = 400
@@ -95,13 +95,13 @@ export default function LayoutBuilder({ paper, orientation, borderWidth, borderC
       return
     }
 
-    const layoutSlots = initialLayout.slots
+    const layoutBlocks = initialLayout.slots
       ? initialLayout.slots
-      : computeSlotsByGrid(initialLayout.cols, initialLayout.rows, paper, orientation, initialLayout.gap ?? gap)
+      : computeBlocksByGrid(initialLayout.cols, initialLayout.rows, paper, orientation, initialLayout.gap ?? gap)
 
-    setBlocks(layoutSlots)
+    setBlocks(layoutBlocks)
     setName(initialLayout.name || '')
-    setSelectedId(layoutSlots[0]?.id ?? null)
+    setSelectedId(layoutBlocks[0]?.id ?? null)
   }, [initialLayout, paper, orientation, gap])
 
   const formatDisplayValue = (px) => {

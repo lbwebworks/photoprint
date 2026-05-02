@@ -16,8 +16,8 @@ export default function App() {
   const [orientation, setOrientation]   = useState('portrait')
   const [template, setTemplate]         = useState('Grid')
   const [grid, setGrid]                 = useState({ mode: 'square', slots: 16, cols: 4, rows: 4 })
-  const [slotSize, setSlotSize]         = useState({ w: mmToPx(35), h: mmToPx(45) })
-  const [slotStyle, setSlotStyle]       = useState({ borderWidth: 0, borderColor: '#000000', gap: 0 })
+  const [blockSize, setBlockSize]       = useState({ w: mmToPx(35), h: mmToPx(45) })
+  const [blockStyle, setBlockStyle]     = useState({ borderWidth: 0, borderColor: '#000000', gap: 0 })
   const [activeLayoutId, setActiveLayoutId] = useState(null)
   const [buildingLayout, setBuildingLayout] = useState(false)
   const [editingLayout, setEditingLayout] = useState(null)
@@ -28,21 +28,21 @@ export default function App() {
 
   const editorRef = useRef(null)
 
-  // Smart setters — changing paper/orientation/slotStyle deselects active custom layout
+  // Smart setters — changing paper/orientation/blockStyle deselects active preset
   function handlePaper(v)       { setPaper(v);       setActiveLayoutId(null) }
   function handleOrientation(v) { setOrientation(v); setActiveLayoutId(null) }
-  function handleSlotStyle(v)   { setSlotStyle(v);   setActiveLayoutId(null) }
+  function handleBlockStyle(v)  { setBlockStyle(v);  setActiveLayoutId(null) }
 
-  // Selecting a custom layout applies its saved settings and switches template
+  // Selecting a preset applies its saved settings and switches template
   function handleSelectLayout(id) {
     if (!id) { setActiveLayoutId(null); setTemplate('Grid'); return }
     const layout = customLayouts.find((l) => l.id === id)
     if (!layout) return
     setActiveLayoutId(id)
-    setTemplate('Custom Layout')
+    setTemplate('Preset')
     if (layout.paper)       setPaper(layout.paper)
     if (layout.orientation) setOrientation(layout.orientation)
-    setSlotStyle({
+    setBlockStyle({
       borderWidth: layout.borderWidth ?? 0,
       borderColor: layout.borderColor ?? '#000000',
       gap:         layout.gap         ?? 0,
@@ -60,7 +60,7 @@ export default function App() {
       setActiveLayoutId(layout.id ? layout.id : next[next.length - 1].id)
       return next
     })
-    setTemplate('Custom Layout')
+    setTemplate('Preset')
     setBuildingLayout(false)
     setEditingLayout(null)
   }
@@ -78,10 +78,10 @@ export default function App() {
     if (!layout) return
     setEditingLayout(layout)
     setActiveLayoutId(id)
-    setTemplate('Custom Layout')
+    setTemplate('Preset')
     if (layout.paper) setPaper(layout.paper)
     if (layout.orientation) setOrientation(layout.orientation)
-    setSlotStyle({
+    setBlockStyle({
       borderWidth: layout.borderWidth ?? 0,
       borderColor: layout.borderColor ?? '#000000',
       gap: layout.gap ?? 0,
@@ -117,8 +117,8 @@ export default function App() {
           orientation={orientation} onOrientation={handleOrientation}
           template={template} onTemplate={setTemplate}
           grid={grid} onGrid={setGrid}
-          slotSize={slotSize} onSlotSize={setSlotSize}
-          slotStyle={slotStyle} onSlotStyle={handleSlotStyle}
+          blockSize={blockSize} onBlockSize={setBlockSize}
+          blockStyle={blockStyle} onBlockStyle={handleBlockStyle}
           customLayouts={customLayouts}
           activeLayoutId={activeLayoutId}
           onSelectLayout={handleSelectLayout}
@@ -133,9 +133,9 @@ export default function App() {
             <LayoutBuilder
               paper={paper}
               orientation={orientation}
-              borderWidth={slotStyle.borderWidth}
-              borderColor={slotStyle.borderColor}
-              gap={slotStyle.gap}
+              borderWidth={blockStyle.borderWidth}
+              borderColor={blockStyle.borderColor}
+              gap={blockStyle.gap}
               initialLayout={editingLayout}
               onSave={handleSaveLayout}
               onCancel={() => { setBuildingLayout(false); setEditingLayout(null) }}
@@ -150,8 +150,8 @@ export default function App() {
                   orientation={orientation}
                   template={template}
                   grid={grid}
-                  slotSize={slotSize}
-                  slotStyle={slotStyle}
+                  blockSize={blockSize}
+                  blockStyle={blockStyle}
                   customLayouts={customLayouts}
                   activeLayoutId={activeLayoutId}
                 />
