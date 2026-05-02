@@ -9,6 +9,19 @@ body {
   font-family: system-ui, sans-serif;
 }
 
+/* Pointer cursor on all interactive elements globally */
+button:not(:disabled),
+[role="button"],
+select,
+label[for],
+label:has(input) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 /* Dark theme (default) */
 .dark {
   --bg-base:       #1a1a1a;

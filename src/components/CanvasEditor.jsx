@@ -217,6 +217,10 @@ const CanvasEditor = forwardRef(function CanvasEditor(
       return selectedIds.size > 0
     },
 
+    deselectAll() {
+      setSelectedIds(new Set())
+    },
+
     clearAll() {
       setBlockImages({})
       setSelectedIds(new Set())

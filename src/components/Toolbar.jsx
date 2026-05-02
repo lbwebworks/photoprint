@@ -1,9 +1,42 @@
 import { useState } from 'react'
-import { GRID_OPTIONS, PAPER_SIZES, ORIENTATIONS, getUsable, mmToPx, pxToMm } from '../utils/layoutEngine'
+import { GRID_OPTIONS, PAPER_SIZES, getUsable, mmToPx, pxToMm, cmToPx, pxToCm, inchToPx, pxToInch } from '../utils/layoutEngine'
 import { IS_LOCAL } from '../utils/presets'
 
 const LAYOUTS = ['Grid', 'Free Size']
-const MIN_PX = mmToPx(10)
+const MIN_BLOCK_PX = mmToPx(10)
+
+const UNITS = [
+  { value: 'px', label: 'px' },
+  { value: 'mm', label: 'mm' },
+  { value: 'cm', label: 'cm' },
+  { value: 'in', label: 'in' },
+]
+
+/** Convert px → display value for the chosen unit */
+function toDisplay(px, unit) {
+  switch (unit) {
+    case 'mm': return parseFloat(pxToMm(px))
+    case 'cm': return parseFloat(pxToCm(px))
+    case 'in': return parseFloat(pxToInch(px))
+    default:   return Math.round(px)
+  }
+}
+
+/** Convert display value → px */
+function fromDisplay(val, unit) {
+  const n = parseFloat(val)
+  if (isNaN(n)) return 0
+  switch (unit) {
+    case 'mm': return mmToPx(n)
+    case 'cm': return cmToPx(n)
+    case 'in': return inchToPx(n)
+    default:   return Math.round(n)
+  }
+}
+
+function stepFor(unit) {
+  return unit === 'px' ? 1 : 0.1
+}
 
 function LabeledSelect({ label, value, onChange, children }) {
   return (
@@ -25,57 +58,67 @@ function Divider() {
   return <div style={{ borderColor: 'var(--border)' }} className="border-t" />
 }
 
-function SizeSlider({ label, value, max, onChange }) {
-  const minMm = parseFloat(pxToMm(MIN_PX))
-  const maxMm = parseFloat(pxToMm(max))
+/**
+ * A numeric input that shows the value in the chosen unit.
+ * min/max are in px; value and onChange are in px.
+ */
+function UnitInput({ label, valuePx, minPx = 0, maxPx, unit, onChange }) {
+  const displayVal = toDisplay(valuePx, unit)
+  const displayMin = toDisplay(minPx, unit)
+  const displayMax = maxPx !== undefined ? toDisplay(maxPx, unit) : undefined
 
-  function handleTextChange(e) {
-    const mm = parseFloat(e.target.value)
-    if (isNaN(mm)) return
-    onChange(mmToPx(Math.min(maxMm, Math.max(minMm, mm))))
+  function handleChange(e) {
+    const px = fromDisplay(e.target.value, unit)
+    const clamped = Math.max(minPx, maxPx !== undefined ? Math.min(maxPx, px) : px)
+    onChange(clamped)
   }
 
   return (
-    <div className="flex flex-col gap-1 w-full">
+    <div className="flex flex-col gap-1">
       <div className="flex justify-between items-center text-xs">
         <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
-        <div className="flex items-center gap-1">
-          <input
-            type="number"
-            min={minMm}
-            max={maxMm}
-            step={0.1}
-            value={pxToMm(value)}
-            onChange={handleTextChange}
-            style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-            className="w-16 text-xs px-2 py-1 rounded border focus:outline-none text-right"
-          />
-          <span style={{ color: 'var(--text-muted)' }}>mm</span>
-        </div>
+        <input
+          type="number"
+          min={displayMin}
+          max={displayMax}
+          step={stepFor(unit)}
+          value={displayVal}
+          onChange={handleChange}
+          style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+          className="w-16 text-xs px-2 py-1 rounded border focus:outline-none text-right"
+        />
       </div>
       <input
         type="range"
-        min={MIN_PX}
-        max={max}
-        value={value}
+        min={minPx}
+        max={maxPx ?? 200}
+        value={valuePx}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-indigo-500 cursor-pointer"
       />
-      <div className="flex justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
-        <span>{pxToMm(MIN_PX)} mm</span>
-        <span>{pxToMm(max)} mm</span>
-      </div>
+      {maxPx !== undefined && (
+        <div className="flex justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+          <span>{toDisplay(minPx, unit)} {unit}</span>
+          <span>{toDisplay(maxPx, unit)} {unit}</span>
+        </div>
+      )}
     </div>
   )
 }
 
-export default function Toolbar({ paper, onPaper, orientation, onOrientation, template, onTemplate, grid, onGrid, blockSize, onBlockSize, blockStyle, onBlockStyle, presets, activePresetId, onSelectPreset, onCreatePreset, onEditPreset, onDeletePreset, disabled = false }) {
+export default function Toolbar({
+  paper, orientation,
+  template, onTemplate,
+  grid, onGrid,
+  blockSize, onBlockSize,
+  blockStyle, onBlockStyle,
+  presets, activePresetId,
+  onSelectPreset, onCreatePreset, onEditPreset, onDeletePreset,
+  multiPage = false, disabled = false,
+}) {
   const usable = getUsable(paper, orientation)
   const [presetsOpen, setPresetsOpen] = useState(false)
-
-  function handleCreate() {
-    onCreatePreset()
-  }
+  const [unit, setUnit] = useState('mm')
 
   function handlePublish(l) {
     const snippet = `  { id: '${l.id}', name: '${l.name}', cols: ${l.cols}, rows: ${l.rows} },`
@@ -84,32 +127,34 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
   }
 
   return (
-    <aside style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
-      className={`w-[20%] min-w-48 shrink-0 border-r flex flex-col gap-4 p-4 overflow-y-auto ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <aside
+      style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
+      className={`w-[20%] min-w-48 shrink-0 border-r flex flex-col gap-4 p-4 overflow-y-auto ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+    >
 
-      {/* Presets — collapsible, drives all controls below */}
+      {/* Presets — collapsible */}
       <div className="flex flex-col gap-1">
         <button
           onClick={() => setPresetsOpen((o) => !o)}
           className="flex items-center justify-between w-full text-xs focus:outline-none"
           style={{ color: 'var(--text-secondary)' }}
         >
-          <span>Presets {activePresetId && <span style={{ color: 'var(--text-muted)' }}>({presets.find(p => p.id === activePresetId)?.name})</span>}</span>
+          <span>
+            Presets{activePresetId && (
+              <span style={{ color: 'var(--text-muted)' }}> ({presets.find(p => p.id === activePresetId)?.name})</span>
+            )}
+          </span>
           <span>{presetsOpen ? '▲' : '▼'}</span>
         </button>
 
         {presetsOpen && (
           <div className="flex flex-col gap-2 mt-1">
-            {/* Scrollable tile grid */}
             <div className="grid grid-cols-3 gap-1 overflow-y-auto" style={{ maxHeight: '200px' }}>
 
-              {/* Create Preset tile — always first */}
+              {/* Create Preset tile */}
               <div
-                onClick={handleCreate}
-                style={{
-                  borderColor: 'var(--border)',
-                  color: 'var(--text-muted)',
-                }}
+                onClick={onCreatePreset}
+                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
                 className="aspect-square rounded border border-dashed cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:text-indigo-500 hover:bg-[var(--bg-elevated)]"
               >
                 <span className="text-lg leading-none">+</span>
@@ -120,9 +165,9 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
               <div
                 onClick={() => onSelectPreset(null)}
                 style={{
-                  background: !activePresetId ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                  background:  !activePresetId ? 'var(--bg-elevated)' : 'var(--bg-base)',
                   borderColor: !activePresetId ? '#6366f1' : 'var(--border)',
-                  color: !activePresetId ? 'var(--text-primary)' : 'var(--text-muted)',
+                  color:       !activePresetId ? 'var(--text-primary)' : 'var(--text-muted)',
                 }}
                 className="aspect-square rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
               >
@@ -134,7 +179,7 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
                   key={p.id}
                   onClick={() => onSelectPreset(p.id)}
                   style={{
-                    background: activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                    background:  activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
                     borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
                     color: 'var(--text-primary)',
                   }}
@@ -144,8 +189,15 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
                   <span style={{ color: 'var(--text-muted)' }} className="text-[10px] leading-tight">
                     {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
                   </span>
+                  {(p.paper || p.orientation) && (
+                    <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight text-center px-1">
+                      {[
+                        p.paper       ? PAPER_SIZES[p.paper]?.label : null,
+                        p.orientation ? p.orientation[0].toUpperCase() + p.orientation.slice(1) : null,
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
 
-                  {/* Action buttons — visible on hover */}
                   <div className="absolute top-0.5 right-0.5 hidden group-hover:flex gap-0.5">
                     {IS_LOCAL && (
                       <button
@@ -177,17 +229,25 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
 
       <Divider />
 
-      <LabeledSelect label="Paper" value={paper} onChange={(e) => onPaper(e.target.value)}>
-        {Object.keys(PAPER_SIZES).map((key) => (
-          <option key={key} value={key}>{PAPER_SIZES[key].label}</option>
-        ))}
-      </LabeledSelect>
-
-      <LabeledSelect label="Orientation" value={orientation} onChange={(e) => onOrientation(e.target.value)}>
-        {ORIENTATIONS.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </LabeledSelect>
+      {/* Unit selector — shared across border, gap, and free size */}
+      <div className="flex items-center justify-between text-xs">
+        <span style={{ color: 'var(--text-secondary)' }}>Unit</span>
+        <div className="flex rounded overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+          {UNITS.map((u) => (
+            <button
+              key={u.value}
+              onClick={() => setUnit(u.value)}
+              className="px-2 py-1 text-xs transition"
+              style={{
+                background: unit === u.value ? '#6366f1' : 'var(--bg-elevated)',
+                color:      unit === u.value ? 'white'   : 'var(--text-secondary)',
+              }}
+            >
+              {u.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <Divider />
 
@@ -195,28 +255,14 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
       <div className="flex flex-col gap-3">
         <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Border</span>
 
-        <div className="flex flex-col gap-1">
-          <div className="flex justify-between items-center text-xs">
-            <span style={{ color: 'var(--text-secondary)' }}>Width</span>
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                min={0}
-                max={20}
-                value={blockStyle.borderWidth}
-                onChange={(e) => onBlockStyle({ ...blockStyle, borderWidth: Math.max(0, Number(e.target.value)) })}
-                style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-                className="w-14 text-xs px-2 py-1 rounded border focus:outline-none text-right"
-              />
-              <span style={{ color: 'var(--text-muted)' }}>px</span>
-            </div>
-          </div>
-          <input
-            type="range" min={0} max={20} value={blockStyle.borderWidth}
-            onChange={(e) => onBlockStyle({ ...blockStyle, borderWidth: Number(e.target.value) })}
-            className="w-full accent-indigo-500 cursor-pointer"
-          />
-        </div>
+        <UnitInput
+          label="Width"
+          valuePx={blockStyle.borderWidth}
+          minPx={0}
+          maxPx={mmToPx(5)}
+          unit={unit}
+          onChange={(px) => onBlockStyle({ ...blockStyle, borderWidth: px })}
+        />
 
         <div className="flex flex-col gap-1">
           <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Color</span>
@@ -237,28 +283,14 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <div className="flex justify-between items-center text-xs">
-            <span style={{ color: 'var(--text-secondary)' }}>Gap</span>
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                min={0}
-                max={200}
-                value={blockStyle.gap}
-                onChange={(e) => onBlockStyle({ ...blockStyle, gap: Math.max(0, Number(e.target.value)) })}
-                style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-                className="w-14 text-xs px-2 py-1 rounded border focus:outline-none text-right"
-              />
-              <span style={{ color: 'var(--text-muted)' }}>px</span>
-            </div>
-          </div>
-          <input
-            type="range" min={0} max={200} value={blockStyle.gap}
-            onChange={(e) => onBlockStyle({ ...blockStyle, gap: Number(e.target.value) })}
-            className="w-full accent-indigo-500 cursor-pointer"
-          />
-        </div>
+        <UnitInput
+          label="Gap"
+          valuePx={blockStyle.gap}
+          minPx={0}
+          maxPx={mmToPx(20)}
+          unit={unit}
+          onChange={(px) => onBlockStyle({ ...blockStyle, gap: px })}
+        />
       </div>
 
       <Divider />
@@ -271,7 +303,6 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
 
       {template === 'Grid' && (
         <div className="flex flex-col gap-3">
-          {/* Square presets dropdown */}
           <LabeledSelect
             label="Blocks"
             value={grid.mode === 'square' ? grid.slots : 'custom'}
@@ -292,7 +323,6 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
             ))}
           </LabeledSelect>
 
-          {/* Custom cols × rows inputs */}
           {grid.mode === 'custom' && (
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -326,8 +356,22 @@ export default function Toolbar({ paper, onPaper, orientation, onOrientation, te
       {template === 'Free Size' && (
         <>
           <Divider />
-          <SizeSlider label="Width"  value={blockSize.w} max={usable.w} onChange={(v) => onBlockSize({ ...blockSize, w: v })} />
-          <SizeSlider label="Height" value={blockSize.h} max={usable.h} onChange={(v) => onBlockSize({ ...blockSize, h: v })} />
+          <UnitInput
+            label="Width"
+            valuePx={blockSize.w}
+            minPx={MIN_BLOCK_PX}
+            maxPx={usable.w}
+            unit={unit}
+            onChange={(px) => onBlockSize({ ...blockSize, w: px })}
+          />
+          <UnitInput
+            label="Height"
+            valuePx={blockSize.h}
+            minPx={MIN_BLOCK_PX}
+            maxPx={usable.h}
+            unit={unit}
+            onChange={(px) => onBlockSize({ ...blockSize, h: px })}
+          />
         </>
       )}
     </aside>

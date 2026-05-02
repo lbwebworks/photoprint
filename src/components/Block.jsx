@@ -92,13 +92,20 @@ export default function Block({ block, url, blockStyle, isSelected, isDragOver, 
       )}
 
       <Group clipX={0} clipY={0} clipWidth={block.w} clipHeight={block.h}>
+        {/* Background fill */}
         <Rect
           width={block.w} height={block.h}
           fill={url ? '#fefeff' : '#f5f7fa'}
-          stroke={isSelected ? '#6366f1' : (isDragOver ? '#22d3ee' : normalStroke)}
-          strokeWidth={isSelected || isDragOver ? 3 : normalWidth}
         />
         {url && <BlockImage url={url} blockW={block.w} blockH={block.h} />}
+        {/* Border drawn on top of image so it's always visible */}
+        <Rect
+          width={block.w} height={block.h}
+          fill="transparent"
+          stroke={isSelected ? '#6366f1' : (isDragOver ? '#22d3ee' : normalStroke)}
+          strokeWidth={isSelected || isDragOver ? 3 : normalWidth}
+          listening={false}
+        />
       </Group>
     </Group>
   )

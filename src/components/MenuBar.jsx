@@ -1,34 +1,40 @@
 import { exportPNG, exportPDF, exportAllPNG } from '../utils/exportUtils'
 
-export default function MenuBar({ pages, editorRefs, paper, orientation, theme, onTheme, disabled = false }) {
-  function getActiveStageRef() {
-    // Find the first page ref that has a stageRef (active page)
-    for (const page of (pages ?? [])) {
-      const r = editorRefs?.current?.[page.id]?.current?.stageRef
-      if (r) return r
-    }
-    return null
+export default function MenuBar({ pages, editorRefs, paper, orientation, theme, onTheme, onStartNew, disabled = false }) {
+  function getAllEditors() {
+    return (pages ?? [])
+      .map((p) => editorRefs?.current?.[p.id]?.current)
+      .filter(Boolean)
   }
 
   function getAllStageRefs() {
-    return (pages ?? [])
-      .map((p) => editorRefs?.current?.[p.id]?.current?.stageRef)
-      .filter(Boolean)
+    return getAllEditors().map((e) => e.stageRef).filter(Boolean)
+  }
+
+  function deselectAllPages() {
+    getAllEditors().forEach((e) => e.deselectAll?.())
   }
 
   function handleExportPNG() {
     if (disabled) return
-    const refs = getAllStageRefs()
-    if (refs.length === 1) {
-      exportPNG(refs[0])
-    } else {
-      exportAllPNG(refs)
-    }
+    deselectAllPages()
+    // Small timeout to let React re-render the deselected state before capturing
+    setTimeout(() => {
+      const refs = getAllStageRefs()
+      if (refs.length === 1) {
+        exportPNG(refs[0])
+      } else {
+        exportAllPNG(refs)
+      }
+    }, 50)
   }
 
   function handleExportPDF() {
     if (disabled) return
-    exportPDF(getAllStageRefs(), paper, orientation)
+    deselectAllPages()
+    setTimeout(() => {
+      exportPDF(getAllStageRefs(), paper, orientation)
+    }, 50)
   }
 
   return (
@@ -39,6 +45,14 @@ export default function MenuBar({ pages, editorRefs, paper, orientation, theme, 
       </span>
 
       <div className={`flex items-center gap-2 ${disabled ? 'opacity-50' : ''}`}>
+        <button
+          type="button"
+          onClick={onStartNew}
+          style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+          className="border text-sm px-3 py-1.5 rounded transition hover:opacity-80"
+        >
+          Start New
+        </button>
         <button
           type="button"
           disabled={disabled}
