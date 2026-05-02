@@ -49,6 +49,9 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   // Block currently being dragged over (for drop highlight)
   const [dragOverBlockId, setDragOverBlockId] = useState(null)
 
+  // Block currently in crop/edit mode
+  const [editingBlockId, setEditingBlockId] = useState(null)
+
   // Ref for latest render-scope values used by imperative methods
   const renderStateRef = useRef({ blocks: [], autoUrls: [], blockImages: {} })
 
@@ -67,6 +70,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   useEffect(() => {
     setBlockImages({})
     setSelectedIds(new Set())
+    setEditingBlockId(null)
   }, [template, grid, blockSize, paper, orientation, activePresetId])
 
   const { width: pageW, height: pageH } = getPaperDims(paper, orientation)
@@ -281,6 +285,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                     blockStyle={blockStyle}
                     isSelected={selectedIds.has(block.id)}
                     isDragOver={dragOverBlockId === block.id}
+                    isEditing={editingBlockId === block.id}
                     onSelect={handleBlockSelect}
                     onRemoveImage={handleRemoveImage}
                   />
@@ -289,15 +294,19 @@ const CanvasEditor = forwardRef(function CanvasEditor(
             </Layer>
           </Stage>
 
-          {/* DOM overlay per block: handles X button and drag-source behaviour */}
+          {/* DOM overlay per block: handles X button, edit button, and drag-source behaviour */}
           {blocks.map((block, i) => {
             const url = getEffectiveUrl(block.id, i)
+            const isEditing = editingBlockId === block.id
             return (
               <BlockOverlay
                 key={block.id}
                 block={block}
                 url={url}
                 stageScale={stageScale}
+                isEditing={isEditing}
+                onEdit={() => { setEditingBlockId(block.id); setSelectedIds(new Set()) }}
+                onDone={() => setEditingBlockId(null)}
                 onRemove={() => handleRemoveImage(block.id)}
               />
             )
@@ -310,14 +319,15 @@ const CanvasEditor = forwardRef(function CanvasEditor(
 
 /**
  * Transparent DOM overlay covering a block.
- * - Shows X button on hover (when block has an image)
- * - Acts as HTML5 drag source so blocks can be swapped
+ * - Normal mode: drag source for swapping, shows ✎ edit + ✕ remove on hover
+ * - Edit mode: passes pointer events through to Konva for drag/zoom crop,
+ *   shows an amber "Done" pill to exit
  */
-function BlockOverlay({ block, url, stageScale, onRemove }) {
+function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRemove }) {
   const BTN_SIZE = 20
 
   function handleDragStart(e) {
-    if (!url) { e.preventDefault(); return }
+    if (!url || isEditing) { e.preventDefault(); return }
     e.dataTransfer.setData('text/plain', url)
     e.dataTransfer.setData('application/block-id', block.id)
     e.dataTransfer.effectAllowed = 'move'
@@ -325,32 +335,73 @@ function BlockOverlay({ block, url, stageScale, onRemove }) {
 
   return (
     <div
-      draggable={!!url}
+      draggable={!!url && !isEditing}
       onDragStart={handleDragStart}
-      className="absolute group"
+      className={`absolute ${isEditing ? '' : 'group'}`}
       style={{
         left:          block.x * stageScale,
         top:           block.y * stageScale,
         width:         block.w * stageScale,
         height:        block.h * stageScale,
-        pointerEvents: 'auto',
-        cursor:        url ? 'grab' : 'default',
+        // In edit mode pass all pointer events through to Konva canvas
+        pointerEvents: isEditing ? 'none' : 'auto',
+        cursor:        isEditing ? 'default' : (url ? 'grab' : 'default'),
       }}
     >
-      {url && (
+      {/* Normal mode buttons — visible on hover */}
+      {!isEditing && url && (
+        <>
+          {/* Edit button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit() }}
+            title="Edit crop"
+            style={{
+              position: 'absolute',
+              top:      2,
+              right:    BTN_SIZE + 6,
+              width:    BTN_SIZE,
+              height:   BTN_SIZE,
+              pointerEvents: 'auto',
+            }}
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-amber-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+          >
+            ✎
+          </button>
+          {/* Remove button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onRemove() }}
+            title="Remove image"
+            style={{
+              position: 'absolute',
+              top:      2,
+              right:    2,
+              width:    BTN_SIZE,
+              height:   BTN_SIZE,
+              pointerEvents: 'auto',
+            }}
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-rose-600 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+          >
+            ✕
+          </button>
+        </>
+      )}
+
+      {/* Edit mode — Done button, pointer events re-enabled only on the button */}
+      {isEditing && (
         <button
-          onClick={(e) => { e.stopPropagation(); onRemove() }}
-          title="Remove image"
+          onClick={(e) => { e.stopPropagation(); onDone() }}
+          title="Done editing"
           style={{
-            position: 'absolute',
-            top:      2,
-            right:    2,
-            width:    BTN_SIZE,
-            height:   BTN_SIZE,
+            position:      'absolute',
+            bottom:        6,
+            left:          '50%',
+            transform:     'translateX(-50%)',
+            pointerEvents: 'auto',
+            whiteSpace:    'nowrap',
           }}
-          className="flex items-center justify-center rounded bg-black/60 hover:bg-rose-600 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+          className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500 hover:bg-amber-400 text-white text-xs font-medium shadow-lg"
         >
-          ✕
+          ✓ Done
         </button>
       )}
     </div>

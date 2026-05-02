@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Group, Rect, Image as KonvaImage } from 'react-konva'
 import { getFillScale, clampOffset } from '../utils/imageUtils'
 
-function BlockImage({ url, blockW, blockH }) {
+function BlockImage({ url, blockW, blockH, interactive }) {
   const [img, setImg] = useState(null)
   const [zoom, setZoom] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -29,12 +29,14 @@ function BlockImage({ url, blockW, blockH }) {
   const pos = clampOffset(baseX + offset.x, baseY + offset.y, drawW, drawH, blockW, blockH)
 
   function handleWheel(e) {
+    if (!interactive) return
     e.evt.preventDefault()
     const factor = e.evt.deltaY < 0 ? 1.05 : 0.95
     setZoom((z) => Math.max(1, z * factor))
   }
 
   function handleDragMove(e) {
+    if (!interactive) return
     const raw = e.target.position()
     const clamped = clampOffset(raw.x, raw.y, drawW, drawH, blockW, blockH)
     e.target.position(clamped)
@@ -46,45 +48,34 @@ function BlockImage({ url, blockW, blockH }) {
       image={img}
       x={pos.x} y={pos.y}
       width={drawW} height={drawH}
-      draggable
+      draggable={interactive}
       onDragMove={handleDragMove}
       onWheel={handleWheel}
     />
   )
 }
 
-export default function Block({ block, url, blockStyle, isSelected, isDragOver, onSelect, onRemoveImage }) {
+export default function Block({ block, url, blockStyle, isSelected, isDragOver, isEditing, onSelect, onRemoveImage }) {
   const { borderWidth = 0, borderColor = '#000000' } = blockStyle || {}
 
   const normalStroke  = borderWidth > 0 ? borderColor : '#c0c8d8'
   const normalWidth   = borderWidth > 0 ? borderWidth : 2
 
+  const ringStroke = isEditing ? '#f59e0b' : isSelected ? '#6366f1' : isDragOver ? '#22d3ee' : null
+
   return (
     <Group
       x={block.x} y={block.y}
-      onClick={(e) => { e.cancelBubble = true; onSelect?.(block.id, e.evt.shiftKey || e.evt.metaKey || e.evt.ctrlKey) }}
-      onTap={() => onSelect?.(block.id, false)}
+      onClick={(e) => { e.cancelBubble = true; if (!isEditing) onSelect?.(block.id, e.evt.shiftKey || e.evt.metaKey || e.evt.ctrlKey) }}
+      onTap={() => { if (!isEditing) onSelect?.(block.id, false) }}
     >
-      {/* Selection ring */}
-      {isSelected && (
+      {/* Selection / edit ring */}
+      {ringStroke && (
         <Rect
           x={-3} y={-3}
           width={block.w + 6} height={block.h + 6}
           fill="transparent"
-          stroke="#6366f1"
-          strokeWidth={4}
-          cornerRadius={2}
-          listening={false}
-        />
-      )}
-
-      {/* Drop-target highlight ring */}
-      {isDragOver && !isSelected && (
-        <Rect
-          x={-3} y={-3}
-          width={block.w + 6} height={block.h + 6}
-          fill="transparent"
-          stroke="#22d3ee"
+          stroke={ringStroke}
           strokeWidth={4}
           cornerRadius={2}
           listening={false}
@@ -97,13 +88,13 @@ export default function Block({ block, url, blockStyle, isSelected, isDragOver, 
           width={block.w} height={block.h}
           fill={url ? '#fefeff' : '#f5f7fa'}
         />
-        {url && <BlockImage url={url} blockW={block.w} blockH={block.h} />}
+        {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} />}
         {/* Border drawn on top of image so it's always visible */}
         <Rect
           width={block.w} height={block.h}
           fill="transparent"
-          stroke={isSelected ? '#6366f1' : (isDragOver ? '#22d3ee' : normalStroke)}
-          strokeWidth={isSelected || isDragOver ? 3 : normalWidth}
+          stroke={isEditing ? '#f59e0b' : isSelected ? '#6366f1' : (isDragOver ? '#22d3ee' : normalStroke)}
+          strokeWidth={isEditing || isSelected || isDragOver ? 3 : normalWidth}
           listening={false}
         />
       </Group>
