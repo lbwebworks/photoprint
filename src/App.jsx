@@ -22,6 +22,7 @@ export default function App() {
   const [buildingPreset, setBuildingPreset] = useState(false)
   const [editingPreset, setEditingPreset]   = useState(null)
   const [fillMode, setFillMode]             = useState('none')
+  const [selectedCount, setSelectedCount]   = useState(0)
 
   // User preferences — persisted across visits
   const [theme, setTheme]             = usePersistedState('lk_theme', 'light')
@@ -159,11 +160,19 @@ export default function App() {
                   </select>
                 </div>
                 <button
-                  onClick={() => { editorRef.current?.clearAll(); setFillMode('none') }}
+                  onClick={() => { editorRef.current?.clearAll(); setFillMode('none'); setSelectedCount(0) }}
                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                   className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
                 >
                   Clear All
+                </button>
+                <button
+                  disabled={selectedCount === 0}
+                  onClick={() => { editorRef.current?.clearSelected(); setSelectedCount(0) }}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Clear
                 </button>
                 <button
                   onClick={() => editorRef.current?.shuffle()}
@@ -187,6 +196,7 @@ export default function App() {
                   blockStyle={blockStyle}
                   presets={presets}
                   activePresetId={activePresetId}
+                  onSelectionChange={setSelectedCount}
                 />
               </div>
               <p className="mt-4 text-xs" style={{ color: 'var(--text-muted)' }}>
