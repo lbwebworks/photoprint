@@ -21,6 +21,7 @@ export default function App() {
   const [activePresetId, setActivePresetId] = useState(null)
   const [buildingPreset, setBuildingPreset] = useState(false)
   const [editingPreset, setEditingPreset]   = useState(null)
+  const [fillMode, setFillMode]             = useState('none')
 
   // User preferences — persisted across visits
   const [theme, setTheme]             = usePersistedState('lk_theme', 'light')
@@ -142,10 +143,42 @@ export default function App() {
             />
           ) : (
             <>
+              {/* Print mode settings bar */}
+              <div className="flex items-center gap-3 w-full max-w-2xl mb-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span style={{ color: 'var(--text-secondary)' }} className="text-xs whitespace-nowrap">Fill Mode</span>
+                  <select
+                    value={fillMode}
+                    onChange={(e) => setFillMode(e.target.value)}
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                    className="text-xs px-2 py-1.5 rounded border focus:outline-none cursor-pointer"
+                  >
+                    <option value="none">None</option>
+                    <option value="autofill">Auto Fill</option>
+                    <option value="autofill-all">Auto Fill All</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => { editorRef.current?.clearAll(); setFillMode('none') }}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => editorRef.current?.shuffle()}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
+                >
+                  Shuffle
+                </button>
+              </div>
+
               <div className="w-full max-w-2xl shadow-2xl">
                 <CanvasEditor
                   ref={editorRef}
                   images={images}
+                  fillMode={fillMode}
                   paper={paper}
                   orientation={orientation}
                   template={template}

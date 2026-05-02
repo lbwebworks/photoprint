@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Group, Rect, Image as KonvaImage } from 'react-konva'
+import { Group, Rect, Image as KonvaImage, Text } from 'react-konva'
 import { getFillScale, clampOffset } from '../utils/imageUtils'
 
 function BlockImage({ url, blockW, blockH }) {
@@ -59,18 +59,62 @@ function BlockImage({ url, blockW, blockH }) {
   )
 }
 
-export default function Block({ block, url, blockStyle }) {
-  const { borderWidth = 0, borderColor = '#000000' } = blockStyle || {}
+// Semi-transparent Remove button rendered at the bottom-center of the block
+function RemoveButton({ blockW, blockH, onRemove }) {
+  const BTN_W = 80
+  const BTN_H = 24
+  const BTN_X = (blockW - BTN_W) / 2
+  const BTN_Y = blockH - BTN_H - 10
+  const CORNER = 4
+
   return (
-    <Group x={block.x} y={block.y} clipX={0} clipY={0} clipWidth={block.w} clipHeight={block.h}>
+    <Group>
+      <Rect
+        x={BTN_X} y={BTN_Y}
+        width={BTN_W} height={BTN_H}
+        cornerRadius={CORNER}
+        fill="rgba(220,38,38,0.65)"
+        onClick={(e) => { e.cancelBubble = true; onRemove() }}
+        onTap={(e) => { e.cancelBubble = true; onRemove() }}
+        onMouseEnter={(e) => { e.target.fill('rgba(220,38,38,0.85)'); e.target.getLayer().batchDraw() }}
+        onMouseLeave={(e) => { e.target.fill('rgba(220,38,38,0.65)'); e.target.getLayer().batchDraw() }}
+      />
+      <Text
+        x={BTN_X} y={BTN_Y}
+        width={BTN_W} height={BTN_H}
+        text="Remove" fontSize={11}
+        align="center" verticalAlign="middle"
+        fill="white" listening={false}
+      />
+    </Group>
+  )
+}
+
+export default function Block({ block, url, blockStyle, isSelected, onSelect, onRemoveImage }) {
+  const { borderWidth = 0, borderColor = '#000000' } = blockStyle || {}
+
+  return (
+    <Group
+      x={block.x} y={block.y}
+      clipX={0} clipY={0} clipWidth={block.w} clipHeight={block.h}
+      onClick={() => onSelect?.(block.id)}
+      onTap={() => onSelect?.(block.id)}
+    >
       <Rect
         width={block.w}
         height={block.h}
         fill={url ? '#fefeff' : '#f5f7fa'}
-        stroke={borderWidth > 0 ? borderColor : '#c0c8d8'}
-        strokeWidth={borderWidth > 0 ? borderWidth : 2}
+        stroke={isSelected ? '#6366f1' : (borderWidth > 0 ? borderColor : '#c0c8d8')}
+        strokeWidth={isSelected ? 3 : (borderWidth > 0 ? borderWidth : 2)}
       />
       {url && <BlockImage url={url} blockW={block.w} blockH={block.h} />}
+      {isSelected && url && (
+        <RemoveButton
+          blockW={block.w}
+          blockH={block.h}
+          onRemove={() => onRemoveImage?.(block.id)}
+        />
+      )}
     </Group>
   )
 }

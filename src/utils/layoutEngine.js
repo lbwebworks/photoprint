@@ -125,11 +125,21 @@ export function computeBlocksBySize(blockW, blockH, paperKey, orientation, gap =
 }
 
 /**
- * Auto-fill logic:
- * - Blocks are filled by cycling through images repeatedly until all blocks are filled.
- * - e.g. 3 images, 8 blocks → [1,2,3,1,2,3,1,2]
+ * Auto-fill logic — "autofill-all":
+ * Blocks are filled by cycling through images repeatedly until all blocks are filled.
+ * e.g. 3 images, 8 blocks → [1,2,3,1,2,3,1,2]
  */
 export function resolveBlockImages(blocks, images) {
   if (!images.length) return blocks.map(() => null)
   return blocks.map((_, i) => images[i % images.length])
+}
+
+/**
+ * Auto-fill logic — "autofill" (no repeat):
+ * Each image is assigned to one block in order; remaining blocks get null.
+ * e.g. 3 images, 8 blocks → [1,2,3,null,null,null,null,null]
+ */
+export function resolveBlockImagesFill(blocks, images) {
+  if (!images.length) return blocks.map(() => null)
+  return blocks.map((_, i) => images[i] ?? null)
 }
