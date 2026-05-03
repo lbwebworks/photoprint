@@ -221,7 +221,6 @@ export default function App() {
             onCreatePreset={handleCreatePreset}
             onEditPreset={handleEditPreset}
             onDeletePreset={handleDeletePreset}
-            multiPage={multiPage}
             disabled={buildingPreset}
           />
 
