@@ -322,6 +322,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
  * - Normal mode: drag source for swapping, shows ✎ edit + ✕ remove on hover
  * - Edit mode: passes pointer events through to Konva for drag/zoom crop,
  *   shows an amber "Done" pill to exit
+ * - Empty blocks: shows a dashed placeholder border (DOM only, never exported)
  */
 function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRemove }) {
   const BTN_SIZE = 20
@@ -343,66 +344,40 @@ function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRem
         top:           block.y * stageScale,
         width:         block.w * stageScale,
         height:        block.h * stageScale,
-        // In edit mode pass all pointer events through to Konva canvas
         pointerEvents: isEditing ? 'none' : 'auto',
         cursor:        isEditing ? 'default' : (url ? 'grab' : 'default'),
+        // DOM-only placeholder for empty blocks — never captured by canvas export
+        boxSizing:     'border-box',
+        border:        !url ? '1.5px dashed #c0c8d8' : 'none',
+        background:    !url ? 'rgba(245,247,250,0.5)' : 'transparent',
       }}
     >
       {/* Normal mode buttons — visible on hover */}
       {!isEditing && url && (
         <>
-          {/* Edit button */}
           <button
             onClick={(e) => { e.stopPropagation(); onEdit() }}
             title="Edit crop"
-            style={{
-              position: 'absolute',
-              top:      2,
-              right:    BTN_SIZE + 6,
-              width:    BTN_SIZE,
-              height:   BTN_SIZE,
-              pointerEvents: 'auto',
-            }}
+            style={{ position: 'absolute', top: 2, right: BTN_SIZE + 6, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
             className="flex items-center justify-center rounded bg-black/60 hover:bg-amber-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-          >
-            ✎
-          </button>
-          {/* Remove button */}
+          >✎</button>
           <button
             onClick={(e) => { e.stopPropagation(); onRemove() }}
             title="Remove image"
-            style={{
-              position: 'absolute',
-              top:      2,
-              right:    2,
-              width:    BTN_SIZE,
-              height:   BTN_SIZE,
-              pointerEvents: 'auto',
-            }}
+            style={{ position: 'absolute', top: 2, right: 2, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
             className="flex items-center justify-center rounded bg-black/60 hover:bg-rose-600 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-          >
-            ✕
-          </button>
+          >✕</button>
         </>
       )}
 
-      {/* Edit mode — Done button, pointer events re-enabled only on the button */}
+      {/* Edit mode — Done button */}
       {isEditing && (
         <button
           onClick={(e) => { e.stopPropagation(); onDone() }}
           title="Done editing"
-          style={{
-            position:      'absolute',
-            bottom:        6,
-            left:          '50%',
-            transform:     'translateX(-50%)',
-            pointerEvents: 'auto',
-            whiteSpace:    'nowrap',
-          }}
+          style={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', pointerEvents: 'auto', whiteSpace: 'nowrap' }}
           className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500 hover:bg-amber-400 text-white text-xs font-medium shadow-lg"
-        >
-          ✓ Done
-        </button>
+        >✓ Done</button>
       )}
     </div>
   )

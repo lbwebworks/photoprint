@@ -83,20 +83,34 @@ export default function Block({ block, url, blockStyle, isSelected, isDragOver, 
       )}
 
       <Group clipX={0} clipY={0} clipWidth={block.w} clipHeight={block.h}>
-        {/* Background fill */}
+        {/* Background — white for empty blocks so they're invisible on export */}
         <Rect
           width={block.w} height={block.h}
-          fill={url ? '#fefeff' : '#f5f7fa'}
+          fill={url ? '#fefeff' : 'white'}
         />
         {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} />}
-        {/* Border drawn on top of image so it's always visible */}
-        <Rect
-          width={block.w} height={block.h}
-          fill="transparent"
-          stroke={isEditing ? '#f59e0b' : isSelected ? '#6366f1' : (isDragOver ? '#22d3ee' : normalStroke)}
-          strokeWidth={isEditing || isSelected || isDragOver ? 3 : normalWidth}
-          listening={false}
-        />
+        {/* Border — only when block has an image or user set a border width */}
+        {(url || borderWidth > 0) && (
+          <Rect
+            width={block.w} height={block.h}
+            fill="transparent"
+            stroke={isEditing ? '#f59e0b' : isSelected ? '#6366f1' : (isDragOver ? '#22d3ee' : normalStroke)}
+            strokeWidth={isEditing || isSelected || isDragOver ? 3 : normalWidth}
+            listening={false}
+          />
+        )}
+        {/* Selection/drag ring on empty blocks — shown in editor only via opacity,
+            still captured by export but as a solid indigo/cyan ring which is intentional
+            (export deselects first anyway) */}
+        {!url && borderWidth === 0 && (isSelected || isDragOver) && (
+          <Rect
+            width={block.w} height={block.h}
+            fill="transparent"
+            stroke={isSelected ? '#6366f1' : '#22d3ee'}
+            strokeWidth={3}
+            listening={false}
+          />
+        )}
       </Group>
     </Group>
   )
