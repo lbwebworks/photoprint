@@ -117,7 +117,7 @@ export default function Toolbar({
   multiPage = false, disabled = false,
 }) {
   const usable = getUsable(paper, orientation)
-  const [presetsOpen, setPresetsOpen] = useState(false)
+  const [presetsOpen, setPresetsOpen] = useState(true)
   const [unit, setUnit] = useState('mm')
 
   function handlePublish(l) {
@@ -149,7 +149,7 @@ export default function Toolbar({
 
         {presetsOpen && (
           <div className="flex flex-col gap-2 mt-1">
-            <div className="grid grid-cols-3 gap-1 overflow-y-auto" style={{ maxHeight: '200px' }}>
+            <div className="grid grid-cols-3 gap-1 overflow-y-auto" style={{ maxHeight: '40vh' }}>
 
               {/* Create Preset tile */}
               <div

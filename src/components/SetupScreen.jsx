@@ -6,16 +6,25 @@ const ORIENTATIONS = [
   { value: 'landscape', label: 'Landscape', icon: '▭' },
 ]
 
+// Compute a proportional icon size for each paper key (portrait orientation)
+// Scale so the longest side is 28px
+function paperIcon(key) {
+  const { width, height } = PAPER_SIZES[key]
+  const longest = Math.max(width, height)
+  const scale = 28 / longest
+  return { w: Math.round(width * scale), h: Math.round(height * scale) }
+}
+
 export default function SetupScreen({ onSetup }) {
-  const [selectedPaper, setSelectedPaper]           = useState(null)
+  const [selectedPaper, setSelectedPaper]             = useState(null)
   const [selectedOrientation, setSelectedOrientation] = useState(null)
 
   const canStart = selectedPaper && selectedOrientation
 
   return (
-    <div className="flex-1 flex items-center justify-center p-8">
+    <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
       <div
-        className="flex flex-col items-center gap-8 w-full max-w-sm"
+        className="flex flex-col items-center gap-8 w-full max-w-md"
         style={{ color: 'var(--text-primary)' }}
       >
         {/* Title */}
@@ -26,33 +35,36 @@ export default function SetupScreen({ onSetup }) {
           </p>
         </div>
 
-        {/* Paper size */}
+        {/* Paper size — 3 columns */}
         <div className="w-full flex flex-col gap-2">
           <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Paper Size</span>
-          <div className="grid grid-cols-2 gap-3">
-            {Object.entries(PAPER_SIZES).map(([key, { label }]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedPaper(key)}
-                className="flex flex-col items-center justify-center gap-1 py-4 rounded-lg border-2 transition"
-                style={{
-                  background:   selectedPaper === key ? 'rgba(99,102,241,0.08)' : 'var(--bg-elevated)',
-                  borderColor:  selectedPaper === key ? '#6366f1' : 'var(--border)',
-                  color:        selectedPaper === key ? '#6366f1' : 'var(--text-secondary)',
-                }}
-              >
-                {/* Paper icon — proportional rectangle */}
-                <span
-                  className="block border-2 rounded-sm"
+          <div className="grid grid-cols-3 gap-3">
+            {Object.entries(PAPER_SIZES).map(([key, { label }]) => {
+              const icon = paperIcon(key)
+              const selected = selectedPaper === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => setSelectedPaper(key)}
+                  className="flex flex-col items-center justify-center gap-2 py-4 rounded-lg border-2 transition"
                   style={{
-                    width:       key === 'A4' ? 20 : 24,
-                    height:      key === 'A4' ? 28 : 20,
-                    borderColor: selectedPaper === key ? '#6366f1' : 'var(--border)',
+                    background:  selected ? 'rgba(99,102,241,0.08)' : 'var(--bg-elevated)',
+                    borderColor: selected ? '#6366f1' : 'var(--border)',
+                    color:       selected ? '#6366f1' : 'var(--text-secondary)',
                   }}
-                />
-                <span className="text-sm font-semibold">{label}</span>
-              </button>
-            ))}
+                >
+                  <span
+                    className="block border-2 rounded-sm"
+                    style={{
+                      width:       icon.w,
+                      height:      icon.h,
+                      borderColor: selected ? '#6366f1' : 'var(--border)',
+                    }}
+                  />
+                  <span className="text-sm font-semibold">{label}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
