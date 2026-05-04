@@ -1,15 +1,62 @@
 import { useRef, useState, useEffect } from 'react'
-import { Stage, Layer, Rect, Transformer, Group, Circle, Text } from 'react-konva'
+import { Stage, Layer, Rect, Transformer, Group, Circle, Text, Line } from 'react-konva'
 import { getPaperDims, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm, computeBlocksByGrid } from '../utils/layoutEngine'
 
 const DEFAULT_BLOCK_W = 400
 const DEFAULT_BLOCK_H = 400
+const SNAP_THRESHOLD  = 10   // paper-px within which a snap fires
 const UNIT_OPTIONS = [
   { value: 'px', label: 'px' },
   { value: 'cm', label: 'cm' },
   { value: 'mm', label: 'mm' },
   { value: 'in', label: 'inch' },
 ]
+
+// ─── Snap helpers ─────────────────────────────────────────────────────────────
+
+/** Collect x and y snap candidates from page edges/center and other blocks */
+function getSnapCandidates(blocks, draggingId, pageW, pageH) {
+  const cx = [MARGIN, pageW / 2, pageW - MARGIN]
+  const cy = [MARGIN, pageH / 2, pageH - MARGIN]
+  blocks.forEach((b) => {
+    if (b.id === draggingId) return
+    cx.push(b.x, b.x + b.w / 2, b.x + b.w)
+    cy.push(b.y, b.y + b.h / 2, b.y + b.h)
+  })
+  return { x: cx, y: cy }
+}
+
+function nearestSnap(val, candidates) {
+  let best = null, bestDist = SNAP_THRESHOLD
+  for (const c of candidates) {
+    const d = Math.abs(val - c)
+    if (d < bestDist) { bestDist = d; best = c }
+  }
+  return best
+}
+
+/** Snap block position; returns snapped {x,y} and active guide lines */
+function snapBlock(x, y, w, h, candidates) {
+  const guides = []
+
+  const snapL = nearestSnap(x,         candidates.x)
+  const snapC = nearestSnap(x + w / 2, candidates.x)
+  const snapR = nearestSnap(x + w,     candidates.x)
+  let fx = x
+  if      (snapL !== null) { fx = snapL;         guides.push({ axis: 'x', pos: snapL }) }
+  else if (snapC !== null) { fx = snapC - w / 2; guides.push({ axis: 'x', pos: snapC }) }
+  else if (snapR !== null) { fx = snapR - w;     guides.push({ axis: 'x', pos: snapR }) }
+
+  const snapT = nearestSnap(y,         candidates.y)
+  const snapM = nearestSnap(y + h / 2, candidates.y)
+  const snapB = nearestSnap(y + h,     candidates.y)
+  let fy = y
+  if      (snapT !== null) { fy = snapT;         guides.push({ axis: 'y', pos: snapT }) }
+  else if (snapM !== null) { fy = snapM - h / 2; guides.push({ axis: 'y', pos: snapM }) }
+  else if (snapB !== null) { fy = snapB - h;     guides.push({ axis: 'y', pos: snapB }) }
+
+  return { x: fx, y: fy, guides }
+}
 
 // Gear icon rendered as a Konva Group — sits at top-right of the block.
 // All sizes are specified in screen pixels; dividing by stageScale converts them
@@ -90,7 +137,7 @@ function BlockActionButton({ blockW, blockH, stageScale, onToggle, showActions, 
   )
 }
 
-function ResizableBlock({ block, isSelected, onSelect, onChange, onCopy, onDelete, pageW, pageH, keepRatio, stageScale }) {
+function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onCopy, onDelete, pageW, pageH, keepRatio, stageScale }) {
   const groupRef = useRef(null)
   const trRef = useRef(null)
   const [showActions, setShowActions] = useState(false)
@@ -107,12 +154,18 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, onCopy, onDelet
     if (!isSelected) setShowActions(false)
   }, [isSelected])
 
+  function handleDragMove(e) {
+    const node = e.target
+    onDragMove?.(block.id, node.x(), node.y(), block.w, block.h, node)
+  }
+
   function handleDragEnd(e) {
     const node = e.target
     const x = Math.min(Math.max(node.x(), MARGIN), pageW - MARGIN - block.w)
     const y = Math.min(Math.max(node.y(), MARGIN), pageH - MARGIN - block.h)
     node.position({ x, y })
     onChange({ ...block, x, y })
+    onDragMove?.(null, 0, 0, 0, 0, null) // clear guides
   }
 
   function handleTransformEnd() {
@@ -140,6 +193,7 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, onCopy, onDelet
         draggable
         onClick={() => { onSelect(block.id); setShowActions(false) }}
         onTap={() => { onSelect(block.id); setShowActions(false) }}
+        onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onTransformEnd={handleTransformEnd}
       >
@@ -187,6 +241,8 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
   const [name, setName] = useState('')
   const [unit, setUnit] = useState('px')
   const [freeForm, setFreeForm] = useState(false)
+  const [snapGuides, setSnapGuides] = useState([])
+  const [alignOpen, setAlignOpen] = useState(false)
 
   useEffect(() => {
     if (!initialPreset) {
@@ -264,6 +320,37 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
     setBlocks((prev) => prev.map((s) => s.id === updated.id ? updated : s))
   }
 
+  // ── Snap drag handler ──
+  function handleBlockDragMove(draggingId, rawX, rawY, w, h, node) {
+    if (!draggingId || !node) { setSnapGuides([]); return }
+    const candidates = getSnapCandidates(blocks, draggingId, pageW, pageH)
+    const { x, y, guides } = snapBlock(rawX, rawY, w, h, candidates)
+    node.position({ x, y })
+    setSnapGuides(guides)
+  }
+
+  // ── Alignment (relative to usable area inside margins) ──
+  const usableX = MARGIN, usableY = MARGIN
+  const usableW = pageW - MARGIN * 2, usableH = pageH - MARGIN * 2
+
+  const ALIGN_OPTIONS = [
+    { label: 'Top Left',      fn: (b) => ({ ...b, x: usableX,                       y: usableY }) },
+    { label: 'Top Center',    fn: (b) => ({ ...b, x: usableX + (usableW - b.w) / 2, y: usableY }) },
+    { label: 'Top Right',     fn: (b) => ({ ...b, x: usableX + usableW - b.w,        y: usableY }) },
+    { label: 'Middle Left',   fn: (b) => ({ ...b, x: usableX,                       y: usableY + (usableH - b.h) / 2 }) },
+    { label: 'Center',        fn: (b) => ({ ...b, x: usableX + (usableW - b.w) / 2, y: usableY + (usableH - b.h) / 2 }) },
+    { label: 'Middle Right',  fn: (b) => ({ ...b, x: usableX + usableW - b.w,        y: usableY + (usableH - b.h) / 2 }) },
+    { label: 'Bottom Left',   fn: (b) => ({ ...b, x: usableX,                       y: usableY + usableH - b.h }) },
+    { label: 'Bottom Center', fn: (b) => ({ ...b, x: usableX + (usableW - b.w) / 2, y: usableY + usableH - b.h }) },
+    { label: 'Bottom Right',  fn: (b) => ({ ...b, x: usableX + usableW - b.w,        y: usableY + usableH - b.h }) },
+  ]
+
+  function applyAlign(fn) {
+    if (!selected) return
+    handleChange(fn(selected))
+    setAlignOpen(false)
+  }
+
   function handleSelectedDimensionChange(field, rawValue) {
     if (!selected) return
     const px = Math.max(convertToPx(rawValue), mmToPx(10))
@@ -316,6 +403,33 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
           className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-1.5 rounded transition">
           + Add Block
         </button>
+
+        {/* Align dropdown */}
+        <div className="relative">
+          <button
+            disabled={!selected}
+            onClick={() => setAlignOpen((o) => !o)}
+            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+            className="border text-sm px-3 py-1.5 rounded transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+          >
+            Align <span className="text-xs">{alignOpen ? '▲' : '▼'}</span>
+          </button>
+          {alignOpen && selected && (
+            <div
+              className="absolute top-full left-0 mt-1 z-50 rounded shadow-xl border overflow-hidden"
+              style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', minWidth: 140 }}
+            >
+              {ALIGN_OPTIONS.map((a) => (
+                <button key={a.label} onClick={() => applyAlign(a.fn)}
+                  style={{ color: 'var(--text-primary)' }}
+                  className="w-full text-left text-xs px-3 py-2 hover:bg-indigo-500 hover:text-white transition"
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <button onClick={handleSave}
           className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-1.5 rounded transition">
           Save Preset
@@ -414,6 +528,7 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
                   isSelected={block.id === selectedId}
                   onSelect={setSelectedId}
                   onChange={handleChange}
+                  onDragMove={handleBlockDragMove}
                   onCopy={copyBlock}
                   onDelete={removeBlock}
                   pageW={pageW}
@@ -422,13 +537,20 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
                   stageScale={stageScale}
                 />
               ))}
+
+              {/* Snap guide lines — red dashed, shown while dragging */}
+              {snapGuides.map((g, i) =>
+                g.axis === 'x'
+                  ? <Line key={i} points={[g.pos, 0, g.pos, pageH]} stroke="#f43f5e" strokeWidth={1} dash={[6, 4]} listening={false} />
+                  : <Line key={i} points={[0, g.pos, pageW, g.pos]} stroke="#f43f5e" strokeWidth={1} dash={[6, 4]} listening={false} />
+              )}
             </Layer>
           </Stage>
         )}
       </div>
 
       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-        Click a block to select · Drag to move · Drag handles to resize · Dashed line = margin boundary
+        Click a block to select · Drag to move · Drag handles to resize · Red lines = snap guides · Dashed line = margin boundary
       </p>
     </div>
   )
