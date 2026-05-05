@@ -108,6 +108,71 @@ function UnitInput({ label, valuePx, minPx = 0, maxPx, unit, onChange }) {
   )
 }
 
+/** Per-tile ⋯ dropdown — uses fixed positioning so it escapes overflow containers */
+function PresetMenu({ preset, onPublish, onEdit, onDelete }) {
+  const [open, setOpen] = useState(false)
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef(null)
+
+  function handleOpen(e) {
+    e.stopPropagation()
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setMenuPos({ top: r.top, left: r.right + 4 })
+    }
+    setOpen((o) => !o)
+  }
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return
+    function handler() { setOpen(false) }
+    window.addEventListener('mousedown', handler)
+    return () => window.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div
+      className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        ref={btnRef}
+        onMouseDown={handleOpen}
+        className="flex items-center justify-center w-5 h-5 rounded bg-white/90 border border-slate-200 shadow-sm text-slate-500 hover:text-slate-800 text-xs leading-none"
+        title="Options"
+      >⋯</button>
+
+      {open && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          className="fixed z-[9999] rounded shadow-lg border overflow-hidden"
+          style={{ top: menuPos.top, left: menuPos.left, background: 'var(--bg-surface)', borderColor: 'var(--border)', minWidth: 80 }}
+        >
+          {onPublish && (
+            <button
+              onMouseDown={(e) => { e.stopPropagation(); onPublish(preset); setOpen(false) }}
+              className="w-full text-left text-[10px] px-2 py-1.5 hover:bg-indigo-500 hover:text-white transition"
+              style={{ color: 'var(--text-primary)' }}
+            >↑ Publish</button>
+          )}
+          <button
+            onMouseDown={(e) => { e.stopPropagation(); onEdit(preset.id); setOpen(false) }}
+            className="w-full text-left text-[10px] px-2 py-1.5 hover:bg-slate-500 hover:text-white transition"
+            style={{ color: 'var(--text-primary)' }}
+          >✎ Edit</button>
+          <button
+            onMouseDown={(e) => { e.stopPropagation(); onDelete(preset.id); setOpen(false) }}
+            className="w-full text-left text-[10px] px-2 py-1.5 hover:bg-rose-500 hover:text-white transition"
+            style={{ color: 'var(--text-primary)' }}
+          >✕ Delete</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Toolbar({
   paper, orientation,
   template, onTemplate,
@@ -233,7 +298,7 @@ export default function Toolbar({
                       borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
                       color: 'var(--text-primary)',
                     }}
-                    className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 relative group hover:border-indigo-400 hover:bg-[var(--bg-elevated)] overflow-hidden"
+                    className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 relative group hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
                   >
                     <span className="text-[11px] font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
                     <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight">
@@ -248,28 +313,12 @@ export default function Toolbar({
                       </span>
                     )}
 
-                    <div className="absolute top-0.5 right-0.5 hidden group-hover:flex gap-0.5">
-                      {IS_LOCAL && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handlePublish(p) }}
-                          className="text-[11px] px-1.5 py-0.5 hover:text-indigo-500 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm cursor-pointer"
-                          style={{ color: 'var(--text-muted)' }}
-                          title="Publish"
-                        >↑</button>
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onEditPreset(p.id) }}
-                        className="text-[11px] px-1.5 py-0.5 hover:text-slate-700 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm cursor-pointer"
-                        style={{ color: 'var(--text-muted)' }}
-                        title="Edit"
-                      >✎</button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDeletePreset(p.id) }}
-                        className="text-[11px] px-1.5 py-0.5 hover:text-rose-500 transition leading-none rounded border border-slate-200 bg-white/90 hover:bg-white shadow-sm cursor-pointer"
-                        style={{ color: 'var(--text-muted)' }}
-                        title="Delete"
-                      >✕</button>
-                    </div>
+                    <PresetMenu
+                      preset={p}
+                      onPublish={IS_LOCAL ? handlePublish : null}
+                      onEdit={onEditPreset}
+                      onDelete={onDeletePreset}
+                    />
                   </div>
                 ))}
               </div>

@@ -58,38 +58,23 @@ function snapBlock(x, y, w, h, candidates) {
   return { x: fx, y: fy, guides }
 }
 
-// Gear icon rendered as a Konva Group — sits at top-right of the block.
-// All sizes are specified in screen pixels; dividing by stageScale converts them
-// to paper-pixel space so they appear at a fixed physical size on screen.
-function BlockActionButton({ blockW, blockH, stageScale, onToggle, showActions, onCopy, onDelete }) {
-  // Fixed screen-pixel sizes (matches the old DOM button)
-  const S = 1 / stageScale          // 1 screen-px in paper-px
-  const BTN_R  = 14 * S             // gear circle radius
-  const PAD    = 6  * S             // padding from block edge
+// Gear circle only — the dropdown is rendered as a DOM overlay in the parent
+function BlockGearButton({ blockW, stageScale, onGearClick }) {
+  const S      = 1 / stageScale
+  const BTN_R  = 14 * S
+  const PAD    = 6  * S
   const BTN_X  = blockW - BTN_R - PAD
   const BTN_Y  = BTN_R + PAD
-
-  // Menu item dimensions in screen px → paper px
-  const ITEM_W = 52 * S
-  const ITEM_H = 22 * S
-  const ITEM_GAP = 4 * S
-  const FONT_BTN = 11 * S
   const FONT_GEAR = 13 * S
-  const CORNER = 4 * S
-
-  // Position menu to the right of the gear button
-  const MENU_X = BTN_X + BTN_R + PAD
-  const MENU_Y = BTN_Y - BTN_R
 
   return (
     <Group>
-      {/* Gear circle */}
       <Circle
         x={BTN_X} y={BTN_Y} radius={BTN_R}
         fill="rgba(255,255,255,0.95)" stroke="#cbd5e1" strokeWidth={S}
         shadowColor="black" shadowBlur={4 * S} shadowOpacity={0.12}
-        onClick={(e) => { e.cancelBubble = true; onToggle() }}
-        onTap={(e) => { e.cancelBubble = true; onToggle() }}
+        onClick={(e) => { e.cancelBubble = true; onGearClick(e) }}
+        onTap={(e)   => { e.cancelBubble = true; onGearClick(e) }}
         onMouseEnter={(e) => { e.target.fill('rgba(241,245,249,0.98)'); e.target.getLayer().batchDraw() }}
         onMouseLeave={(e) => { e.target.fill('rgba(255,255,255,0.95)'); e.target.getLayer().batchDraw() }}
       />
@@ -99,59 +84,19 @@ function BlockActionButton({ blockW, blockH, stageScale, onToggle, showActions, 
         text="⚙" fontSize={FONT_GEAR} align="center" verticalAlign="middle"
         fill="#475569" listening={false}
       />
-
-      {/* Dropdown menu — shown to the left of the gear button */}
-      {showActions && (
-        <Group x={MENU_X} y={MENU_Y}>
-          {/* Copy button */}
-          <Rect
-            width={ITEM_W} height={ITEM_H} cornerRadius={CORNER}
-            fill="#475569"
-            onClick={(e) => { e.cancelBubble = true; onCopy() }}
-            onTap={(e) => { e.cancelBubble = true; onCopy() }}
-            onMouseEnter={(e) => { e.target.fill('#334155'); e.target.getLayer().batchDraw() }}
-            onMouseLeave={(e) => { e.target.fill('#475569'); e.target.getLayer().batchDraw() }}
-          />
-          <Text
-            x={0} y={0} width={ITEM_W} height={ITEM_H}
-            text="Copy" fontSize={FONT_BTN} align="center" verticalAlign="middle"
-            fill="white" listening={false}
-          />
-          {/* Delete button */}
-          <Rect
-            y={ITEM_H + ITEM_GAP} width={ITEM_W} height={ITEM_H} cornerRadius={CORNER}
-            fill="#e11d48"
-            onClick={(e) => { e.cancelBubble = true; onDelete() }}
-            onTap={(e) => { e.cancelBubble = true; onDelete() }}
-            onMouseEnter={(e) => { e.target.fill('#be123c'); e.target.getLayer().batchDraw() }}
-            onMouseLeave={(e) => { e.target.fill('#e11d48'); e.target.getLayer().batchDraw() }}
-          />
-          <Text
-            x={0} y={ITEM_H + ITEM_GAP} width={ITEM_W} height={ITEM_H}
-            text="Delete" fontSize={FONT_BTN} align="center" verticalAlign="middle"
-            fill="white" listening={false}
-          />
-        </Group>
-      )}
     </Group>
   )
 }
 
-function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onCopy, onDelete, pageW, pageH, keepRatio, stageScale }) {
+function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onGearClick, onCopy, onDelete, pageW, pageH, keepRatio, stageScale }) {
   const groupRef = useRef(null)
   const trRef = useRef(null)
-  const [showActions, setShowActions] = useState(false)
 
   useEffect(() => {
     if (isSelected && trRef.current && groupRef.current) {
       trRef.current.nodes([groupRef.current])
       trRef.current.getLayer().batchDraw()
     }
-  }, [isSelected])
-
-  // Close action menu when block is deselected
-  useEffect(() => {
-    if (!isSelected) setShowActions(false)
   }, [isSelected])
 
   function handleDragMove(e) {
@@ -191,8 +136,8 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onC
         width={block.w}
         height={block.h}
         draggable
-        onClick={() => { onSelect(block.id); setShowActions(false) }}
-        onTap={() => { onSelect(block.id); setShowActions(false) }}
+        onClick={() => { onSelect(block.id) }}
+        onTap={() => { onSelect(block.id) }}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onTransformEnd={handleTransformEnd}
@@ -207,14 +152,23 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onC
           strokeWidth={isSelected ? 6 : 3}
         />
         {isSelected && (
-          <BlockActionButton
+          <BlockGearButton
             blockW={block.w}
-            blockH={block.h}
             stageScale={stageScale}
-            showActions={showActions}
-            onToggle={() => setShowActions((v) => !v)}
-            onCopy={() => { setShowActions(false); onCopy(block.id) }}
-            onDelete={() => { setShowActions(false); onDelete(block.id) }}
+            onGearClick={(e) => {
+              // Convert Konva stage coords to screen coords for the DOM menu
+              const stage = e.target.getStage()
+              const stageBox = stage.container().getBoundingClientRect()
+              const pos = e.target.getAbsolutePosition()
+              const S = 1 / stageScale
+              const BTN_R = 14 * S
+              const PAD = 6 * S
+              const BTN_X = block.w - BTN_R - PAD
+              const BTN_Y = BTN_R + PAD
+              const screenX = stageBox.left + (block.x + BTN_X + BTN_R) * stageScale
+              const screenY = stageBox.top  + (block.y + BTN_Y - BTN_R) * stageScale
+              onGearClick(block.id, screenX, screenY)
+            }}
           />
         )}
       </Group>
@@ -243,6 +197,16 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
   const [freeForm, setFreeForm] = useState(false)
   const [snapGuides, setSnapGuides] = useState([])
   const [alignOpen, setAlignOpen] = useState(false)
+  // Gear dropdown: { blockId, x, y } in screen coords, or null
+  const [gearMenu, setGearMenu] = useState(null)
+
+  // Close gear menu on outside click
+  useEffect(() => {
+    if (!gearMenu) return
+    function handler() { setGearMenu(null) }
+    window.addEventListener('mousedown', handler)
+    return () => window.removeEventListener('mousedown', handler)
+  }, [gearMenu])
 
   useEffect(() => {
     if (!initialPreset) {
@@ -529,6 +493,7 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
                   onSelect={setSelectedId}
                   onChange={handleChange}
                   onDragMove={handleBlockDragMove}
+                  onGearClick={(blockId, x, y) => setGearMenu({ blockId, x, y })}
                   onCopy={copyBlock}
                   onDelete={removeBlock}
                   pageW={pageW}
@@ -548,6 +513,26 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
           </Stage>
         )}
       </div>
+
+      {/* Gear action dropdown — fixed position, escapes canvas clipping */}
+      {gearMenu && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          className="fixed z-[9999] rounded shadow-lg border overflow-hidden"
+          style={{ top: gearMenu.y, left: gearMenu.x + 8, background: 'var(--bg-surface)', borderColor: 'var(--border)', minWidth: 80 }}
+        >
+          <button
+            onMouseDown={() => { copyBlock(gearMenu.blockId); setGearMenu(null) }}
+            className="w-full text-left text-[10px] px-2 py-1.5 hover:bg-slate-500 hover:text-white transition"
+            style={{ color: 'var(--text-primary)' }}
+          >⧉ Copy</button>
+          <button
+            onMouseDown={() => { removeBlock(gearMenu.blockId); setGearMenu(null) }}
+            className="w-full text-left text-[10px] px-2 py-1.5 hover:bg-rose-500 hover:text-white transition"
+            style={{ color: 'var(--text-primary)' }}
+          >✕ Delete</button>
+        </div>
+      )}
 
       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
         Click a block to select · Drag to move · Drag handles to resize · Red lines = snap guides · Dashed line = margin boundary
