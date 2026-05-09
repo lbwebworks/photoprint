@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { Stage, Layer, Rect, Transformer, Group, Circle, Text, Line } from 'react-konva'
-import { getPaperDims, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm, computeBlocksByGrid } from '../utils/layoutEngine'
+import { getPaperDims, PAPER_SIZES, ORIENTATIONS, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm, computeBlocksByGrid } from '../utils/layoutEngine'
 
 const DEFAULT_BLOCK_W = 400
 const DEFAULT_BLOCK_H = 400
@@ -187,7 +187,7 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onG
   )
 }
 
-export default function PresetBuilder({ paper, orientation, borderWidth, borderColor, gap, onSave, onCancel, initialPreset = null }) {
+export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, onCancel, initialPreset = null }) {
   const containerRef = useRef(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [blocks, setBlocks] = useState([])
@@ -197,8 +197,14 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
   const [freeForm, setFreeForm] = useState(false)
   const [snapGuides, setSnapGuides] = useState([])
   const [alignOpen, setAlignOpen] = useState(false)
-  // Gear dropdown: { blockId, x, y } in screen coords, or null
   const [gearMenu, setGearMenu] = useState(null)
+
+  // Paper/orientation owned by the preset — null until chosen (new preset)
+  const [paper, setPaper]             = useState(initialPreset?.paper ?? null)
+  const [orientation, setOrientation] = useState(initialPreset?.orientation ?? null)
+  // For new presets, user must click Continue to confirm; editing skips this
+  const [paperConfirmed, setPaperConfirmed] = useState(initialPreset !== null)
+  const paperReady = paper !== null && orientation !== null && paperConfirmed
 
   // Close gear menu on outside click
   useEffect(() => {
@@ -215,6 +221,7 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
       setSelectedId(null)
       return
     }
+    if (!paper || !orientation) return  // wait until paper/orientation are set
 
     const layoutBlocks = initialPreset.slots
       ? initialPreset.slots
@@ -249,10 +256,10 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
     const observer = new ResizeObserver(([entry]) => setContainerWidth(entry.contentRect.width))
     if (containerRef.current) observer.observe(containerRef.current)
     return () => observer.disconnect()
-  }, [])
+  }, [paperReady])
 
-  const { width: pageW, height: pageH } = getPaperDims(paper, orientation)
-  const stageScale = containerWidth / pageW
+  const { width: pageW, height: pageH } = paperReady ? getPaperDims(paper, orientation) : { width: 1, height: 1 }
+  const stageScale = containerWidth > 0 && pageW > 1 ? containerWidth / pageW : 1
 
   function addBlock() {
     const id = `block-${Date.now()}`
@@ -353,8 +360,75 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      {/* Toolbar row */}
+
+      {/* ── Paper/orientation picker — shown only for new presets ── */}
+      {!paperReady && (
+        <div className="flex flex-col items-center gap-6 w-full max-w-sm mt-4">
+          <div className="text-center">
+            <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>New Preset</h3>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Choose a paper size and orientation for this preset.</p>
+          </div>
+
+          <div className="w-full flex flex-col gap-2">
+            <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Paper Size</span>
+            <div className="grid grid-cols-3 gap-2">
+              {Object.entries(PAPER_SIZES).map(([key, { label }]) => (
+                <button key={key} onClick={() => setPaper(key)}
+                  className="py-3 rounded-lg border-2 text-sm font-semibold transition"
+                  style={{
+                    background:  paper === key ? 'rgba(99,102,241,0.08)' : 'var(--bg-elevated)',
+                    borderColor: paper === key ? '#6366f1' : 'var(--border)',
+                    color:       paper === key ? '#6366f1' : 'var(--text-secondary)',
+                  }}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="w-full flex flex-col gap-2">
+            <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Orientation</span>
+            <div className="grid grid-cols-2 gap-2">
+              {ORIENTATIONS.map(({ value, label }) => (
+                <button key={value} onClick={() => setOrientation(value)}
+                  className="py-3 rounded-lg border-2 text-sm font-semibold transition"
+                  style={{
+                    background:  orientation === value ? 'rgba(99,102,241,0.08)' : 'var(--bg-elevated)',
+                    borderColor: orientation === value ? '#6366f1' : 'var(--border)',
+                    color:       orientation === value ? '#6366f1' : 'var(--text-secondary)',
+                  }}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 w-full">
+            <button onClick={onCancel}
+              style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+              className="flex-1 border text-sm px-4 py-2 rounded transition hover:opacity-80">
+              Cancel
+            </button>
+            <button
+              disabled={!paper || !orientation}
+              onClick={() => setPaperConfirmed(true)}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Main builder — shown once paper/orientation are chosen ── */}
+      {paperReady && (
+        <>
       <div className="flex items-center gap-2 flex-wrap justify-center w-full max-w-2xl">
+        {/* Paper/orientation badge */}
+        <span
+          className="text-xs px-2 py-1 rounded border"
+          style={{ color: 'var(--text-muted)', borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}
+        >
+          {PAPER_SIZES[paper]?.label} · {orientation[0].toUpperCase() + orientation.slice(1)}
+        </span>
         <input
           type="text"
           placeholder="Preset name"
@@ -537,6 +611,8 @@ export default function PresetBuilder({ paper, orientation, borderWidth, borderC
       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
         Click a block to select · Drag to move · Drag handles to resize · Red lines = snap guides · Dashed line = margin boundary
       </p>
+        </>
+      )}
     </div>
   )
 }

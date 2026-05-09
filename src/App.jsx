@@ -227,8 +227,6 @@ export default function App() {
           <main className="flex-1 overflow-y-auto flex flex-col items-center p-6">
             {buildingPreset ? (
               <PresetBuilder
-                paper={paper}
-                orientation={orientation}
                 borderWidth={activePage?.blockStyle.borderWidth ?? 0}
                 borderColor={activePage?.blockStyle.borderColor ?? '#000000'}
                 gap={activePage?.blockStyle.gap ?? 0}
