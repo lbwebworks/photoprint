@@ -217,9 +217,21 @@ export default function Toolbar({
   const cols = Math.max(1, Math.floor((gridAvailW + TILE_GAP) / (TILE_SIZE + TILE_GAP)))
 
   function handlePublish(l) {
-    const snippet = `  { id: '${l.id}', name: '${l.name}', cols: ${l.cols}, rows: ${l.rows} },`
+    const obj = {
+      id:          l.id,
+      name:        l.name,
+      paper:       l.paper       ?? null,
+      orientation: l.orientation ?? null,
+      borderWidth: l.borderWidth ?? 0,
+      borderColor: l.borderColor ?? '#000000',
+      gap:         l.gap         ?? 0,
+      slots:       l.slots       ?? null,
+      cols:        l.cols        ?? null,
+      rows:        l.rows        ?? null,
+    }
+    const snippet = `  ${JSON.stringify(obj)},`
     navigator.clipboard.writeText(snippet)
-      .then(() => alert(`Copied to clipboard!\n\nPaste into SAMPLE_PRESETS in\nsrc/utils/presets.js\n\n${snippet}`))
+      .then(() => alert(`Copied to clipboard!\n\nPaste into SAMPLE_PRESETS in\nsrc/utils/presets.js`))
   }
 
   return (
