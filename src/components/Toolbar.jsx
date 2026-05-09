@@ -187,6 +187,8 @@ export default function Toolbar({
   const [presetsOpen, setPresetsOpen] = useState(true)
   const [unit, setUnit] = useState('mm')
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL)
+  const [filterPaper, setFilterPaper]           = useState('')   // '' = no filter
+  const [filterOrientation, setFilterOrientation] = useState('') // '' = no filter
 
   const isDragging = useRef(false)
   const startX     = useRef(0)
@@ -264,7 +266,32 @@ export default function Toolbar({
           </button>
 
           {presetsOpen && (
-            <div className="mt-1">
+            <div className="mt-1 flex flex-col gap-2">
+              {/* Filter row */}
+              <div className="flex gap-1">
+                <select
+                  value={filterPaper}
+                  onChange={(e) => setFilterPaper(e.target.value)}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                  className="flex-1 text-[10px] px-1 py-1 rounded border focus:outline-none cursor-pointer"
+                >
+                  <option value="">All sizes</option>
+                  {Object.entries(PAPER_SIZES).map(([key, { label }]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+                <select
+                  value={filterOrientation}
+                  onChange={(e) => setFilterOrientation(e.target.value)}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                  className="flex-1 text-[10px] px-1 py-1 rounded border focus:outline-none cursor-pointer"
+                >
+                  <option value="">All orientations</option>
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+              </div>
+
               {/* Preset grid — fixed tile size, own scroll, min 2 rows height */}
               <div
                 className="overflow-y-auto"
@@ -300,7 +327,11 @@ export default function Toolbar({
                   <span className="text-xs font-medium leading-tight text-center px-1">None</span>
                 </div>
 
-                {presets.map((p) => (
+                {presets.filter((p) => {
+                  if (filterPaper && p.paper && p.paper !== filterPaper) return false
+                  if (filterOrientation && p.orientation && p.orientation !== filterOrientation) return false
+                  return true
+                }).map((p) => (
                   <div
                     key={p.id}
                     onClick={() => onSelectPreset(p.id)}
