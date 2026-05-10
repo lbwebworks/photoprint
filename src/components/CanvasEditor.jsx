@@ -30,6 +30,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
     blockStyle = { borderWidth: 0, borderColor: '#000000', gap: 0 },
     presets = [],
     activePresetId = null,
+    rotatedSlots = null,         // overrides preset.slots after a rotation
     onSelectionChange = null,
     onImagesChange = null,       // called with (hasImages: bool) when block image state changes
   },
@@ -66,12 +67,12 @@ const CanvasEditor = forwardRef(function CanvasEditor(
     onSelectionChange?.(selectedIds.size)
   }, [selectedIds, onSelectionChange])
 
-  // Reset when block layout changes
+  // Reset when block layout changes — orientation excluded so rotate preserves image assignments
   useEffect(() => {
     setBlockImages({})
     setSelectedIds(new Set())
     setEditingBlockId(null)
-  }, [template, grid, blockSize, paper, orientation, activePresetId])
+  }, [template, grid, blockSize, paper, activePresetId])
 
   const { width: pageW, height: pageH } = getPaperDims(paper, orientation)
 
@@ -81,8 +82,10 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   } else if (template === 'Preset') {
     const preset = presets.find((p) => p.id === activePresetId)
     if (preset) {
-      blocks = preset.slots
-        ? preset.slots
+      // rotatedSlots takes priority — set by App after a rotation
+      const slots = rotatedSlots ?? preset.slots
+      blocks = slots
+        ? slots
         : computeBlocksByGrid(preset.cols, preset.rows, paper, orientation, blockStyle.gap)
     }
   } else {
@@ -215,6 +218,25 @@ const CanvasEditor = forwardRef(function CanvasEditor(
         const override = bi[block.id]
         return !!(override === undefined ? au[i] : (override || null))
       })
+    },
+
+    // Returns current effective urls keyed by block id, plus current blocks + page dims
+    // Used by App to remap images after a paper rotation
+    getRotateSnapshot() {
+      const { blocks: b, autoUrls: au, blockImages: bi } = renderStateRef.current
+      const urlMap = {}
+      b.forEach((block, i) => {
+        const override = bi[block.id]
+        const url = override === undefined ? (au[i] ?? null) : (override || null)
+        if (url) urlMap[block.id] = url
+      })
+      return { urlMap, blocks: b, pageW, pageH }
+    },
+
+    // Restores blockImages from a pre-computed map (called after orientation toggle)
+    restoreBlockImages(newMap) {
+      setBlockImages(newMap)
+      setSelectedIds(new Set())
     },
 
     hasSelection() {

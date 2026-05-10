@@ -18,6 +18,7 @@ const DEFAULT_PAGE_CONFIG = {
   blockSize:      { w: mmToPx(35), h: mmToPx(45) },
   blockStyle:     { borderWidth: 0, borderColor: '#000000', gap: 0 },
   activePresetId: null,
+  rotatedSlots:   null,  // overrides preset.slots after a rotation
 }
 
 function makePage(config = {}) {
@@ -81,7 +82,7 @@ export default function App() {
   }
 
   function handleBlockStyle(v)  { updateActivePage({ blockStyle: v, activePresetId: null }) }
-  function handleTemplate(v)    { updateActivePage({ template: v }) }
+  function handleTemplate(v)    { updateActivePage({ template: v, rotatedSlots: null }) }
   function handleGrid(v)        { updateActivePage({ grid: v }) }
   function handleBlockSize(v)   { updateActivePage({ blockSize: v }) }
 
@@ -108,6 +109,7 @@ export default function App() {
     updateActivePage({
       activePresetId: id,
       template: 'Preset',
+      rotatedSlots: null,
       blockStyle: {
         borderWidth: preset.borderWidth ?? 0,
         borderColor: preset.borderColor ?? '#000000',
@@ -125,7 +127,7 @@ export default function App() {
     setPresets((prev) => {
       const next = preset.id ? updatePreset(prev, preset) : createPreset(prev, preset)
       const savedId = preset.id ? preset.id : next[next.length - 1].id
-      updateActivePage({ activePresetId: savedId, template: 'Preset' })
+      updateActivePage({ activePresetId: savedId, template: 'Preset', rotatedSlots: null })
       return next
     })
     setBuildingPreset(false)
@@ -147,6 +149,7 @@ export default function App() {
     updateActivePage({
       activePresetId: id,
       template: 'Preset',
+      rotatedSlots: null,
       blockStyle: {
         borderWidth: preset.borderWidth ?? 0,
         borderColor: preset.borderColor ?? '#000000',
@@ -154,6 +157,68 @@ export default function App() {
       },
     })
     setBuildingPreset(true)
+  }
+
+  function handleRotate() {
+    const newOrientation = orientation === 'portrait' ? 'landscape' : 'portrait'
+    const { width: oldW, height: oldH } = getPaperDims(paper, orientation)
+
+    // 90° CW block transform on oldW×oldH paper
+    function rotateBlock(b) {
+      return { ...b, x: oldH - b.y - b.h, y: b.x, w: b.h, h: b.w }
+    }
+
+    // Snapshot current effective urls per page before anything changes
+    const snapshots = pages.map((page) => ({
+      id:       page.id,
+      template: page.template,
+      snap:     editorRefs.current[page.id]?.current?.getRotateSnapshot?.() ?? null,
+    }))
+
+    // For Preset pages with fixed slots, store rotated slot positions in page config
+    setPages((prev) => prev.map((page) => {
+      if (page.template !== 'Preset') return page
+      const currentSlots = page.rotatedSlots
+        ?? presets.find((p) => p.id === page.activePresetId)?.slots
+        ?? null
+      if (!currentSlots) return page  // grid-derived — recomputes automatically
+      return { ...page, rotatedSlots: currentSlots.map(rotateBlock) }
+    }))
+
+    // Toggle orientation — triggers re-render with new paper dims + rotated slots
+    setOrientation(newOrientation)
+
+    // After re-render, remap block images using rotated block centers
+    setTimeout(() => {
+      snapshots.forEach(({ id, snap }) => {
+        if (!snap || Object.keys(snap.urlMap).length === 0) return
+        const editor = editorRefs.current[id]?.current
+        if (!editor) return
+
+        const { urlMap, blocks: oldBlocks } = snap
+        const newSnap = editor.getRotateSnapshot?.()
+        if (!newSnap) return
+        const newBlocks = newSnap.blocks
+
+        const newMap = {}
+        oldBlocks.forEach((oldBlock) => {
+          const url = urlMap[oldBlock.id]
+          if (!url) return
+          // Rotate this block's center 90° CW to find where it lands on the new paper
+          const cx = oldBlock.x + oldBlock.w / 2
+          const cy = oldBlock.y + oldBlock.h / 2
+          const rotX = oldH - cy   // CW: newX = oldH - oldY
+          const rotY = cx           // CW: newY = oldX
+          const target = newBlocks.find((b) =>
+            rotX >= b.x && rotX <= b.x + b.w &&
+            rotY >= b.y && rotY <= b.y + b.h
+          )
+          if (target) newMap[target.id] = url
+        })
+
+        if (Object.keys(newMap).length > 0) editor.restoreBlockImages(newMap)
+      })
+    }, 50)
   }
 
   function handleFiles(e) {
@@ -288,6 +353,14 @@ export default function App() {
                   >
                     + Add Page
                   </button>
+                  <button
+                    onClick={handleRotate}
+                    title="Rotate paper 90° clockwise"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                    className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
+                  >
+                    ↻ Rotate
+                  </button>
                 </div>
 
                 {/* Pages */}
@@ -342,6 +415,7 @@ export default function App() {
                             blockStyle={page.blockStyle}
                             presets={presets}
                             activePresetId={page.activePresetId}
+                            rotatedSlots={page.rotatedSlots ?? null}
                             onImagesChange={(has) => {
                               if (page.id === activePageId) setActivePageHasImages(has)
                             }}
