@@ -2,27 +2,51 @@ import { useState, useEffect } from 'react'
 import { Group, Rect, Image as KonvaImage } from 'react-konva'
 import { getFillScale, clampOffset } from '../utils/imageUtils'
 
-function BlockImage({ url, blockW, blockH, interactive }) {
+function BlockImage({ url, blockW, blockH, interactive, rotation = 0 }) {
   const [img, setImg] = useState(null)
+  const [rotatedImg, setRotatedImg] = useState(null)
   const [zoom, setZoom] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
 
+  // Load the source image
   useEffect(() => {
     const image = new window.Image()
     image.src = url
-    image.onload = () => {
-      setImg(image)
+    image.onload = () => setImg(image)
+  }, [url])
+
+  // Pre-rotate onto an offscreen canvas whenever img or rotation changes
+  useEffect(() => {
+    if (!img) return
+    const rad = (rotation * Math.PI) / 180
+    const sin = Math.abs(Math.sin(rad))
+    const cos = Math.abs(Math.cos(rad))
+    // Rotated canvas dimensions
+    const cw = Math.round(img.width * cos + img.height * sin)
+    const ch = Math.round(img.width * sin + img.height * cos)
+    const canvas = document.createElement('canvas')
+    canvas.width  = cw
+    canvas.height = ch
+    const ctx = canvas.getContext('2d')
+    ctx.translate(cw / 2, ch / 2)
+    ctx.rotate(rad)
+    ctx.drawImage(img, -img.width / 2, -img.height / 2)
+    const out = new window.Image()
+    out.src = canvas.toDataURL()
+    out.onload = () => {
+      setRotatedImg(out)
       setZoom(1)
       setOffset({ x: 0, y: 0 })
     }
-  }, [url])
+  }, [img, rotation])
 
-  if (!img) return null
+  if (!rotatedImg) return null
 
-  const fillScale = getFillScale(img.width, img.height, blockW, blockH)
+  // Standard fill logic on the rotated image
+  const fillScale = getFillScale(rotatedImg.width, rotatedImg.height, blockW, blockH)
   const effectiveScale = fillScale * zoom
-  const drawW = img.width * effectiveScale
-  const drawH = img.height * effectiveScale
+  const drawW = rotatedImg.width  * effectiveScale
+  const drawH = rotatedImg.height * effectiveScale
 
   const baseX = (blockW - drawW) / 2
   const baseY = (blockH - drawH) / 2
@@ -45,7 +69,7 @@ function BlockImage({ url, blockW, blockH, interactive }) {
 
   return (
     <KonvaImage
-      image={img}
+      image={rotatedImg}
       x={pos.x} y={pos.y}
       width={drawW} height={drawH}
       draggable={interactive}
@@ -55,7 +79,7 @@ function BlockImage({ url, blockW, blockH, interactive }) {
   )
 }
 
-export default function Block({ block, url, blockStyle, isSelected, isDragOver, isEditing, onSelect, onRemoveImage }) {
+export default function Block({ block, url, blockStyle, isSelected, isDragOver, isEditing, rotation = 0, onSelect, onRemoveImage }) {
   const { borderWidth = 0, borderColor = '#000000' } = blockStyle || {}
 
   const normalStroke  = borderWidth > 0 ? borderColor : '#c0c8d8'
@@ -88,7 +112,7 @@ export default function Block({ block, url, blockStyle, isSelected, isDragOver, 
           width={block.w} height={block.h}
           fill={url ? '#fefeff' : 'white'}
         />
-        {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} />}
+        {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} rotation={rotation} />}
         {/* Border — only when block has an image or user set a border width */}
         {(url || borderWidth > 0) && (
           <Rect

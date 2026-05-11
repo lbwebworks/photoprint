@@ -44,6 +44,9 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   // '' = explicitly empty sentinel (suppresses auto-fill)
   const [blockImages, setBlockImages] = useState({})
 
+  // Per-block rotation: { [blockId]: 0 | 90 | 180 | 270 }
+  const [blockRotations, setBlockRotations] = useState({})
+
   // Multi-selection: Set of block ids
   const [selectedIds, setSelectedIds] = useState(new Set())
 
@@ -70,6 +73,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   // Reset when block layout changes — orientation excluded so rotate preserves image assignments
   useEffect(() => {
     setBlockImages({})
+    setBlockRotations({})
     setSelectedIds(new Set())
     setEditingBlockId(null)
   }, [template, grid, blockSize, paper, activePresetId])
@@ -199,6 +203,13 @@ const CanvasEditor = forwardRef(function CanvasEditor(
     })
   }
 
+  function handleRotateImage(blockId) {
+    setBlockRotations((prev) => ({
+      ...prev,
+      [blockId]: (((prev[blockId] ?? 0) + 90) % 360),
+    }))
+  }
+
   function handleStageClick(e) {
     if (e.target === e.target.getStage() || e.target.name() === 'paper-bg') {
       setSelectedIds(new Set())
@@ -308,6 +319,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                     isSelected={selectedIds.has(block.id)}
                     isDragOver={dragOverBlockId === block.id}
                     isEditing={editingBlockId === block.id}
+                    rotation={blockRotations[block.id] ?? 0}
                     onSelect={handleBlockSelect}
                     onRemoveImage={handleRemoveImage}
                   />
@@ -329,6 +341,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                 isEditing={isEditing}
                 onEdit={() => { setEditingBlockId(block.id); setSelectedIds(new Set()) }}
                 onDone={() => setEditingBlockId(null)}
+                onRotate={() => handleRotateImage(block.id)}
                 onRemove={() => handleRemoveImage(block.id)}
               />
             )
@@ -346,7 +359,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
  *   shows an amber "Done" pill to exit
  * - Empty blocks: shows a dashed placeholder border (DOM only, never exported)
  */
-function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRemove }) {
+function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRotate, onRemove }) {
   const BTN_SIZE = 20
 
   function handleDragStart(e) {
@@ -380,9 +393,15 @@ function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRem
           <button
             onClick={(e) => { e.stopPropagation(); onEdit() }}
             title="Edit crop"
-            style={{ position: 'absolute', top: 2, right: BTN_SIZE + 6, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
+            style={{ position: 'absolute', top: 2, right: BTN_SIZE * 2 + 10, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
             className="flex items-center justify-center rounded bg-black/60 hover:bg-amber-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
           >✎</button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onRotate() }}
+            title="Rotate image 90°"
+            style={{ position: 'absolute', top: 2, right: BTN_SIZE + 6, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-indigo-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+          >↻</button>
           <button
             onClick={(e) => { e.stopPropagation(); onRemove() }}
             title="Remove image"
