@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { GRID_OPTIONS, PAPER_SIZES, getUsable, mmToPx, pxToMm, cmToPx, pxToCm, inchToPx, pxToInch } from '../utils/layoutEngine'
-import { IS_LOCAL } from '../utils/presets'
+import { IS_LOCAL, SAMPLE_PRESETS, publishPreset, unpublishPreset } from '../utils/presets'
 
 const LAYOUTS = ['Grid', 'Free Size']
 const MIN_BLOCK_PX = mmToPx(10)
@@ -109,7 +109,7 @@ function UnitInput({ label, valuePx, minPx = 0, maxPx, unit, onChange }) {
 }
 
 /** Per-tile ⋯ dropdown — uses fixed positioning so it escapes overflow containers */
-function PresetMenu({ preset, onPublish, onEdit, onDelete }) {
+function PresetMenu({ preset, onPublish, onUnpublish, onEdit, onDelete }) {
   const [open, setOpen] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
   const btnRef = useRef(null)
@@ -157,6 +157,13 @@ function PresetMenu({ preset, onPublish, onEdit, onDelete }) {
               style={{ color: 'var(--text-primary)' }}
             >↑ Publish</button>
           )}
+          {onUnpublish && (
+            <button
+              onMouseDown={(e) => { e.stopPropagation(); onUnpublish(preset); setOpen(false) }}
+              className="w-full text-left text-[10px] px-2 py-1.5 hover:bg-orange-500 hover:text-white transition"
+              style={{ color: 'var(--text-primary)' }}
+            >↓ Unpublish</button>
+          )}
           <button
             onMouseDown={(e) => { e.stopPropagation(); onEdit(preset.id); setOpen(false) }}
             className="w-full text-left text-[10px] px-2 py-1.5 hover:bg-slate-500 hover:text-white transition"
@@ -187,8 +194,7 @@ export default function Toolbar({
   const [presetsOpen, setPresetsOpen] = useState(true)
   const [unit, setUnit] = useState('mm')
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL)
-  const [filterPaper, setFilterPaper]           = useState('')   // '' = no filter
-  const [filterOrientation, setFilterOrientation] = useState('') // '' = no filter
+  const [filterPaper, setFilterPaper] = useState('')   // '' = no filter
 
   const isDragging = useRef(false)
   const startX     = useRef(0)
@@ -219,21 +225,12 @@ export default function Toolbar({
   const cols = Math.max(1, Math.floor((gridAvailW + TILE_GAP) / (TILE_SIZE + TILE_GAP)))
 
   function handlePublish(l) {
-    const obj = {
-      id:          l.id,
-      name:        l.name,
-      paper:       l.paper       ?? null,
-      orientation: l.orientation ?? null,
-      borderWidth: l.borderWidth ?? 0,
-      borderColor: l.borderColor ?? '#000000',
-      gap:         l.gap         ?? 0,
-      slots:       l.slots       ?? null,
-      cols:        l.cols        ?? null,
-      rows:        l.rows        ?? null,
-    }
-    const snippet = `  ${JSON.stringify(obj)},`
-    navigator.clipboard.writeText(snippet)
-      .then(() => alert(`Copied to clipboard!\n\nPaste into SAMPLE_PRESETS in\nsrc/utils/presets.js`))
+    publishPreset(SAMPLE_PRESETS, l)
+  }
+
+  function handleUnpublish(l) {
+    if (!window.confirm(`Remove "${l.name}" from official presets? This will download an updated presets.json.`)) return
+    unpublishPreset(SAMPLE_PRESETS, l.id)
   }
 
   return (
@@ -280,16 +277,22 @@ export default function Toolbar({
                     <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
-                <select
-                  value={filterOrientation}
-                  onChange={(e) => setFilterOrientation(e.target.value)}
+                <button
+                  onClick={() => {
+                    const blob = new Blob([JSON.stringify(presets, null, 2)], { type: 'application/json' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = 'presets.json'
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                  title="Export all presets as JSON"
                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="flex-1 text-[10px] px-1 py-1 rounded border focus:outline-none cursor-pointer"
+                  className="text-[10px] px-2 py-1 rounded border transition hover:opacity-80 whitespace-nowrap"
                 >
-                  <option value="">All orientations</option>
-                  <option value="portrait">Portrait</option>
-                  <option value="landscape">Landscape</option>
-                </select>
+                  ↓ Export
+                </button>
               </div>
 
               {/* Preset grid — fixed tile size, own scroll, min 2 rows height */}
@@ -327,11 +330,10 @@ export default function Toolbar({
                   <span className="text-xs font-medium leading-tight text-center px-1">None</span>
                 </div>
 
-                {presets.filter((p) => {
-                  if (filterPaper && p.paper && p.paper !== filterPaper) return false
-                  if (filterOrientation && p.orientation && p.orientation !== filterOrientation) return false
-                  return true
-                }).map((p) => (
+                {[...presets]
+                  .filter((p) => !filterPaper || !p.paper || p.paper === filterPaper)
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((p) => (
                   <div
                     key={p.id}
                     onClick={() => onSelectPreset(p.id)}
@@ -359,6 +361,7 @@ export default function Toolbar({
                     <PresetMenu
                       preset={p}
                       onPublish={IS_LOCAL ? handlePublish : null}
+                      onUnpublish={IS_LOCAL && SAMPLE_PRESETS.some((s) => s.id === p.id) ? handleUnpublish : null}
                       onEdit={onEditPreset}
                       onDelete={onDeletePreset}
                     />

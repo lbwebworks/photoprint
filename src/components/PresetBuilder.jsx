@@ -88,7 +88,7 @@ function BlockGearButton({ blockW, stageScale, onGearClick }) {
   )
 }
 
-function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onGearClick, onCopy, onDelete, pageW, pageH, keepRatio, stageScale }) {
+function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onGearClick, onCopy, onDelete, pageW, pageH, keepRatio, stageScale, minX, minY }) {
   const groupRef = useRef(null)
   const trRef = useRef(null)
 
@@ -106,8 +106,8 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onG
 
   function handleDragEnd(e) {
     const node = e.target
-    const x = Math.min(Math.max(node.x(), MARGIN), pageW - MARGIN - block.w)
-    const y = Math.min(Math.max(node.y(), MARGIN), pageH - MARGIN - block.h)
+    const x = Math.min(Math.max(node.x(), minX), pageW - minX - block.w)
+    const y = Math.min(Math.max(node.y(), minY), pageH - minY - block.h)
     node.position({ x, y })
     onChange({ ...block, x, y })
     onDragMove?.(null, 0, 0, 0, 0, null) // clear guides
@@ -121,8 +121,8 @@ function ResizableBlock({ block, isSelected, onSelect, onChange, onDragMove, onG
     node.scaleY(1)
     const w = Math.max(mmToPx(10), block.w * scaleX)
     const h = Math.max(mmToPx(10), block.h * scaleY)
-    const x = Math.min(Math.max(node.x(), MARGIN), pageW - MARGIN - w)
-    const y = Math.min(Math.max(node.y(), MARGIN), pageH - MARGIN - h)
+    const x = Math.min(Math.max(node.x(), minX), pageW - minX - w)
+    const y = Math.min(Math.max(node.y(), minY), pageH - minY - h)
     node.position({ x, y })
     onChange({ ...block, x, y, w, h })
   }
@@ -197,6 +197,7 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
   const [freeForm, setFreeForm] = useState(false)
   const [snapGuides, setSnapGuides] = useState([])
   const [alignOpen, setAlignOpen] = useState(false)
+  const [allowOverMargin, setAllowOverMargin] = useState(false)
   const [gearMenu, setGearMenu] = useState(null)
 
   // Paper/orientation owned by the preset — null until chosen (new preset)
@@ -294,15 +295,23 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
   // ── Snap drag handler ──
   function handleBlockDragMove(draggingId, rawX, rawY, w, h, node) {
     if (!draggingId || !node) { setSnapGuides([]); return }
+    const boundary = allowOverMargin ? 0 : MARGIN
     const candidates = getSnapCandidates(blocks, draggingId, pageW, pageH)
+    // Add paper edge candidates when over-margin is allowed
+    if (allowOverMargin) {
+      candidates.x.push(0, pageW)
+      candidates.y.push(0, pageH)
+    }
     const { x, y, guides } = snapBlock(rawX, rawY, w, h, candidates)
     node.position({ x, y })
     setSnapGuides(guides)
   }
 
-  // ── Alignment (relative to usable area inside margins) ──
-  const usableX = MARGIN, usableY = MARGIN
-  const usableW = pageW - MARGIN * 2, usableH = pageH - MARGIN * 2
+  // ── Alignment (relative to usable area inside margins, or full paper if overMargin) ──
+  const usableX = allowOverMargin ? 0 : MARGIN
+  const usableY = allowOverMargin ? 0 : MARGIN
+  const usableW = pageW - usableX * 2
+  const usableH = pageH - usableY * 2
 
   const ALIGN_OPTIONS = [
     { label: 'Top Left',      fn: (b) => ({ ...b, x: usableX,                       y: usableY }) },
@@ -442,6 +451,17 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
           + Add Block
         </button>
 
+        {/* Over-margin toggle */}
+        <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
+          <input
+            type="checkbox"
+            checked={allowOverMargin}
+            onChange={(e) => setAllowOverMargin(e.target.checked)}
+            className="accent-indigo-500"
+          />
+          Over margin
+        </label>
+
         {/* Align dropdown */}
         <div className="relative">
           <button
@@ -552,12 +572,16 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
                 fill="white"
                 onMouseDown={() => setSelectedId(null)}
               />
-              {/* Margin guide */}
+              {/* Margin guide — dashed when enforced, faint dotted when over-margin allowed */}
               <Rect
                 listening={false}
                 x={MARGIN} y={MARGIN}
                 width={pageW - MARGIN * 2} height={pageH - MARGIN * 2}
-                fill="transparent" stroke="#e2e8f0" strokeWidth={3} dash={[20, 10]}
+                fill="transparent"
+                stroke={allowOverMargin ? '#e2e8f0' : '#c4cdd8'}
+                strokeWidth={allowOverMargin ? 2 : 3}
+                dash={allowOverMargin ? [8, 8] : [20, 10]}
+                opacity={allowOverMargin ? 0.5 : 1}
               />
               {blocks.map((block) => (
                 <ResizableBlock
@@ -574,6 +598,8 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
                   pageH={pageH}
                   keepRatio={!freeForm}
                   stageScale={stageScale}
+                  minX={allowOverMargin ? 0 : MARGIN}
+                  minY={allowOverMargin ? 0 : MARGIN}
                 />
               ))}
 

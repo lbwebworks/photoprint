@@ -91,17 +91,8 @@ export default function App() {
     const preset = presets.find((p) => p.id === id)
     if (!preset) return
 
-    // If the preset targets a different paper/orientation, prompt before applying
-    const paperMismatch = preset.paper && preset.paper !== paper
-    const orientationMismatch = preset.orientation && preset.orientation !== orientation
-    if ((paperMismatch || orientationMismatch) && !multiPage) {
-      const presetDesc = [
-        preset.paper       ? PAPER_SIZES[preset.paper]?.label : null,
-        preset.orientation ? preset.orientation               : null,
-      ].filter(Boolean).join(' ')
-      if (!window.confirm(
-        `This preset is designed for ${presetDesc}.\n\nApply it anyway? Paper and orientation will be updated.`
-      )) return
+    // Apply preset's paper/orientation if set (no prompt — user can rotate freely)
+    if (!multiPage) {
       if (preset.paper)       setPaper(preset.paper)
       if (preset.orientation) setOrientation(preset.orientation)
     }
