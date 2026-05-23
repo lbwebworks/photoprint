@@ -188,13 +188,22 @@ export default function Toolbar({
   blockStyle, onBlockStyle,
   presets, activePresetId,
   onSelectPreset, onCreatePreset, onEditPreset, onDeletePreset,
+  onSwitchToCustom,
   disabled = false,
 }) {
   const usable = getUsable(paper, orientation)
-  const [presetsOpen, setPresetsOpen] = useState(true)
+  // 'preset' | 'custom' — which tab is active
+  const [sidebarMode, setSidebarMode] = useState(
+    template === 'Preset' ? 'preset' : 'custom'
+  )
   const [unit, setUnit] = useState('mm')
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL)
   const [filterPaper, setFilterPaper] = useState('')   // '' = no filter
+
+  // Sync tab when activePresetId changes externally (e.g. on load)
+  useEffect(() => {
+    setSidebarMode(template === 'Preset' ? 'preset' : 'custom')
+  }, [template])
 
   const isDragging = useRef(false)
   const startX     = useRef(0)
@@ -247,277 +256,279 @@ export default function Toolbar({
 
       <div className="flex flex-col gap-4 p-4">
 
-        {/* Presets — collapsible */}
-        <div className="flex flex-col gap-1">
+        {/* ── Preset / Custom tabs ── */}
+        <div className="flex rounded overflow-hidden border shrink-0" style={{ borderColor: 'var(--border)' }}>
           <button
-            onClick={() => setPresetsOpen((o) => !o)}
-            className="flex items-center justify-between w-full text-xs focus:outline-none"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <span>
-              Presets{activePresetId && (
-                <span style={{ color: 'var(--text-muted)' }}> ({presets.find(p => p.id === activePresetId)?.name})</span>
-              )}
-            </span>
-            <span>{presetsOpen ? '▲' : '▼'}</span>
-          </button>
+            onClick={() => {setSidebarMode('preset'); onSelectPreset(activePresetId);}}
+            className="flex-1 text-xs py-1.5 transition"
+            style={{
+              background: sidebarMode === 'preset' ? '#6366f1' : 'var(--bg-elevated)',
+              color:      sidebarMode === 'preset' ? 'white'   : 'var(--text-secondary)',
+            }}
+          >Preset</button>
+          <button
+            onClick={() => { setSidebarMode('custom'); onSwitchToCustom?.() }}
+            className="flex-1 text-xs py-1.5 transition"
+            style={{
+              background: sidebarMode === 'custom' ? '#6366f1' : 'var(--bg-elevated)',
+              color:      sidebarMode === 'custom' ? 'white'   : 'var(--text-secondary)',
+            }}
+          >Custom</button>
+        </div>
 
-          {presetsOpen && (
-            <div className="mt-1 flex flex-col gap-2">
-              {/* Filter row */}
-              <div className="flex gap-1">
-                <select
-                  value={filterPaper}
-                  onChange={(e) => setFilterPaper(e.target.value)}
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="flex-1 text-[10px] px-1 py-1 rounded border focus:outline-none cursor-pointer"
-                >
-                  <option value="">All sizes</option>
-                  {Object.entries(PAPER_SIZES).map(([key, { label }]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => {
-                    const blob = new Blob([JSON.stringify(presets, null, 2)], { type: 'application/json' })
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url
-                    a.download = 'presets.json'
-                    a.click()
-                    URL.revokeObjectURL(url)
-                  }}
-                  title="Export all presets as JSON"
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="text-[10px] px-2 py-1 rounded border transition hover:opacity-80 whitespace-nowrap"
-                >
-                  ↓ Export
-                </button>
-              </div>
-
-              {/* Preset grid — fixed tile size, own scroll, min 2 rows height */}
-              <div
-                className="overflow-y-auto"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(${cols}, ${TILE_SIZE}px)`,
-                  gap: TILE_GAP,
-                  minHeight: PRESET_MIN_H,
-                  maxHeight: '40vh',
-                }}
+        {/* ── PRESET panel ── */}
+        {sidebarMode === 'preset' && (
+          <div className="flex flex-col gap-2">
+            {/* Filter + Export row */}
+            <div className="flex gap-1">
+              <select
+                value={filterPaper}
+                onChange={(e) => setFilterPaper(e.target.value)}
+                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                className="flex-1 text-[10px] px-1 py-1 rounded border focus:outline-none cursor-pointer"
               >
-                {/* Create Preset tile */}
-                <div
-                  onClick={onCreatePreset}
-                  style={{ width: TILE_SIZE, height: TILE_SIZE, borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                  className="rounded border border-dashed cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:text-indigo-500 hover:bg-[var(--bg-elevated)]"
-                >
-                  <span className="text-lg leading-none">+</span>
-                  <span className="text-[10px] font-medium leading-tight text-center px-1">Create</span>
-                </div>
-
-                {/* None tile */}
-                <div
-                  onClick={() => onSelectPreset(null)}
-                  style={{
-                    width: TILE_SIZE, height: TILE_SIZE,
-                    background:  !activePresetId ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                    borderColor: !activePresetId ? '#6366f1' : 'var(--border)',
-                    color:       !activePresetId ? 'var(--text-primary)' : 'var(--text-muted)',
-                  }}
-                  className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
-                >
-                  <span className="text-xs font-medium leading-tight text-center px-1">None</span>
-                </div>
-
-                {[...presets]
-                  .filter((p) => !filterPaper || !p.paper || p.paper === filterPaper)
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => onSelectPreset(p.id)}
-                    style={{
-                      width: TILE_SIZE, height: TILE_SIZE,
-                      background:  activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                      borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
-                      color: 'var(--text-primary)',
-                    }}
-                    className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 relative group hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
-                  >
-                    <span className="text-[11px] font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
-                    <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight">
-                      {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
-                    </span>
-                    {(p.paper || p.orientation) && (
-                      <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight text-center px-1">
-                        {[
-                          p.paper       ? PAPER_SIZES[p.paper]?.label : null,
-                          p.orientation ? p.orientation[0].toUpperCase() + p.orientation.slice(1) : null,
-                        ].filter(Boolean).join(' · ')}
-                      </span>
-                    )}
-
-                    <PresetMenu
-                      preset={p}
-                      onPublish={IS_LOCAL ? handlePublish : null}
-                      onUnpublish={IS_LOCAL && SAMPLE_PRESETS.some((s) => s.id === p.id) ? handleUnpublish : null}
-                      onEdit={onEditPreset}
-                      onDelete={onDeletePreset}
-                    />
-                  </div>
+                <option value="">All sizes</option>
+                {Object.entries(PAPER_SIZES).map(([key, { label }]) => (
+                  <option key={key} value={key}>{label}</option>
                 ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <Divider />
-
-        {/* Unit selector */}
-        <div className="flex items-center justify-between text-xs">
-          <span style={{ color: 'var(--text-secondary)' }}>Unit</span>
-          <div className="flex rounded overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
-            {UNITS.map((u) => (
+              </select>
               <button
-                key={u.value}
-                onClick={() => setUnit(u.value)}
-                className="px-2 py-1 text-xs transition"
-                style={{
-                  background: unit === u.value ? '#6366f1' : 'var(--bg-elevated)',
-                  color:      unit === u.value ? 'white'   : 'var(--text-secondary)',
+                onClick={() => {
+                  const blob = new Blob([JSON.stringify(presets, null, 2)], { type: 'application/json' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = 'presets.json'
+                  a.click()
+                  URL.revokeObjectURL(url)
                 }}
-              >
-                {u.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <Divider />
-
-        {/* Block style controls */}
-        <div className="flex flex-col gap-3">
-          <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Border</span>
-
-          <UnitInput
-            label="Width"
-            valuePx={blockStyle.borderWidth}
-            minPx={0}
-            maxPx={mmToPx(5)}
-            unit={unit}
-            onChange={(px) => onBlockStyle({ ...blockStyle, borderWidth: px })}
-          />
-
-          <div className="flex flex-col gap-1">
-            <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Color</span>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={blockStyle.borderColor}
-                onChange={(e) => onBlockStyle({ ...blockStyle, borderColor: e.target.value })}
-                className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent"
-              />
-              <input
-                type="text"
-                value={blockStyle.borderColor}
-                onChange={(e) => onBlockStyle({ ...blockStyle, borderColor: e.target.value })}
-                style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-                className="flex-1 text-xs px-2 py-1 rounded border focus:outline-none"
-              />
+                title="Export all presets as JSON"
+                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                className="text-[10px] px-2 py-1 rounded border transition hover:opacity-80 whitespace-nowrap"
+              >↓ Export</button>
             </div>
-          </div>
 
-          <UnitInput
-            label="Gap"
-            valuePx={blockStyle.gap}
-            minPx={0}
-            maxPx={mmToPx(20)}
-            unit={unit}
-            onChange={(px) => onBlockStyle({ ...blockStyle, gap: px })}
-          />
-        </div>
-
-        <Divider />
-
-        <LabeledSelect label="Layout" value={template} onChange={(e) => onTemplate(e.target.value)}>
-          {LAYOUTS.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </LabeledSelect>
-
-        {template === 'Grid' && (
-          <div className="flex flex-col gap-3">
-            <LabeledSelect
-              label="Blocks"
-              value={grid.mode === 'square' ? grid.slots : 'custom'}
-              onChange={(e) => {
-                const v = e.target.value
-                if (v === 'custom') {
-                  onGrid({ ...grid, mode: 'custom' })
-                } else {
-                  const n = Number(v)
-                  const side = Math.round(Math.sqrt(n))
-                  onGrid({ mode: 'square', slots: n, cols: side, rows: side })
-                }
+            {/* Preset grid */}
+            <div
+              className="overflow-y-auto"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${cols}, ${TILE_SIZE}px)`,
+                gap: TILE_GAP,
+                minHeight: PRESET_MIN_H,
+                maxHeight: '60vh',
               }}
             >
-              <option value="custom">Custom…</option>
-              {GRID_OPTIONS.map((n) => (
-                <option key={n} value={n}>{n} block{n !== 1 ? 's' : ''}</option>
-              ))}
-            </LabeledSelect>
-
-            {grid.mode === 'custom' && (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col gap-1 flex-1">
-                    <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Columns</span>
-                    <input
-                      type="number" min={1} max={24} value={grid.cols}
-                      onChange={(e) => onGrid({ ...grid, cols: Math.max(1, Number(e.target.value)) })}
-                      style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-                      className="w-full text-sm px-3 py-2 rounded border focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 flex-1">
-                    <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Rows</span>
-                    <input
-                      type="number" min={1} max={24} value={grid.rows}
-                      onChange={(e) => onGrid({ ...grid, rows: Math.max(1, Number(e.target.value)) })}
-                      style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-                      className="w-full text-sm px-3 py-2 rounded border focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <span style={{ color: 'var(--text-muted)' }} className="text-xs text-center">
-                  {grid.cols} × {grid.rows} = {grid.cols * grid.rows} blocks
-                </span>
+              {/* Create Preset tile */}
+              <div
+                onClick={onCreatePreset}
+                style={{ width: TILE_SIZE, height: TILE_SIZE, borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                className="rounded border border-dashed cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:text-indigo-500 hover:bg-[var(--bg-elevated)]"
+              >
+                <span className="text-lg leading-none">+</span>
+                <span className="text-[10px] font-medium leading-tight text-center px-1">Create</span>
               </div>
-            )}
+
+              {/* None tile */}
+              <div
+                onClick={() => onSelectPreset(null)}
+                style={{
+                  width: TILE_SIZE, height: TILE_SIZE,
+                  background:  !activePresetId ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                  borderColor: !activePresetId ? '#6366f1' : 'var(--border)',
+                  color:       !activePresetId ? 'var(--text-primary)' : 'var(--text-muted)',
+                }}
+                className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
+              >
+                <span className="text-xs font-medium leading-tight text-center px-1">None</span>
+              </div>
+
+              {[...presets]
+                .filter((p) => !filterPaper || !p.paper || p.paper === filterPaper)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => onSelectPreset(p.id)}
+                  style={{
+                    width: TILE_SIZE, height: TILE_SIZE,
+                    background:  activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                    borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                  className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 relative group hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
+                >
+                  <span className="text-[11px] font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
+                  <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight">
+                    {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
+                  </span>
+                  {(p.paper || p.orientation) && (
+                    <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight text-center px-1">
+                      {[
+                        p.paper       ? PAPER_SIZES[p.paper]?.label : null,
+                        p.orientation ? p.orientation[0].toUpperCase() + p.orientation.slice(1) : null,
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
+                  <PresetMenu
+                    preset={p}
+                    onPublish={IS_LOCAL ? handlePublish : null}
+                    onUnpublish={IS_LOCAL && SAMPLE_PRESETS.some((s) => s.id === p.id) ? handleUnpublish : null}
+                    onEdit={onEditPreset}
+                    onDelete={onDeletePreset}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        {template === 'Free Size' && (
-          <>
+        {/* ── CUSTOM panel ── */}
+        {sidebarMode === 'custom' && (
+          <div className="flex flex-col gap-4">
+
+            {/* Unit selector */}
+            <div className="flex items-center justify-between text-xs">
+              <span style={{ color: 'var(--text-secondary)' }}>Unit</span>
+              <div className="flex rounded overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+                {UNITS.map((u) => (
+                  <button
+                    key={u.value}
+                    onClick={() => setUnit(u.value)}
+                    className="px-2 py-1 text-xs transition"
+                    style={{
+                      background: unit === u.value ? '#6366f1' : 'var(--bg-elevated)',
+                      color:      unit === u.value ? 'white'   : 'var(--text-secondary)',
+                    }}
+                  >{u.label}</button>
+                ))}
+              </div>
+            </div>
+
             <Divider />
-            <UnitInput
-              label="Width"
-              valuePx={blockSize.w}
-              minPx={MIN_BLOCK_PX}
-              maxPx={usable.w}
-              unit={unit}
-              onChange={(px) => onBlockSize({ ...blockSize, w: px })}
-            />
-            <UnitInput
-              label="Height"
-              valuePx={blockSize.h}
-              minPx={MIN_BLOCK_PX}
-              maxPx={usable.h}
-              unit={unit}
-              onChange={(px) => onBlockSize({ ...blockSize, h: px })}
-            />
-          </>
+
+            {/* Border controls */}
+            <div className="flex flex-col gap-3">
+              <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Border</span>
+              <UnitInput
+                label="Width"
+                valuePx={blockStyle.borderWidth}
+                minPx={0}
+                maxPx={mmToPx(5)}
+                unit={unit}
+                onChange={(px) => onBlockStyle({ ...blockStyle, borderWidth: px })}
+              />
+              <div className="flex flex-col gap-1">
+                <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Color</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={blockStyle.borderColor}
+                    onChange={(e) => onBlockStyle({ ...blockStyle, borderColor: e.target.value })}
+                    className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={blockStyle.borderColor}
+                    onChange={(e) => onBlockStyle({ ...blockStyle, borderColor: e.target.value })}
+                    style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                    className="flex-1 text-xs px-2 py-1 rounded border focus:outline-none"
+                  />
+                </div>
+              </div>
+              <UnitInput
+                label="Gap"
+                valuePx={blockStyle.gap}
+                minPx={0}
+                maxPx={mmToPx(20)}
+                unit={unit}
+                onChange={(px) => onBlockStyle({ ...blockStyle, gap: px })}
+              />
+            </div>
+
+            <Divider />
+
+            {/* Layout */}
+            <LabeledSelect label="Layout" value={template} onChange={(e) => onTemplate(e.target.value)}>
+              {LAYOUTS.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </LabeledSelect>
+
+            {template === 'Grid' && (
+              <div className="flex flex-col gap-3">
+                <LabeledSelect
+                  label="Blocks"
+                  value={grid.mode === 'square' ? grid.slots : 'custom'}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    if (v === 'custom') {
+                      onGrid({ ...grid, mode: 'custom' })
+                    } else {
+                      const n = Number(v)
+                      const side = Math.round(Math.sqrt(n))
+                      onGrid({ mode: 'square', slots: n, cols: side, rows: side })
+                    }
+                  }}
+                >
+                  <option value="custom">Custom…</option>
+                  {GRID_OPTIONS.map((n) => (
+                    <option key={n} value={n}>{n} block{n !== 1 ? 's' : ''}</option>
+                  ))}
+                </LabeledSelect>
+
+                {grid.mode === 'custom' && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-1 flex-1">
+                        <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Columns</span>
+                        <input
+                          type="number" min={1} max={24} value={grid.cols}
+                          onChange={(e) => onGrid({ ...grid, cols: Math.max(1, Number(e.target.value)) })}
+                          style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                          className="w-full text-sm px-3 py-2 rounded border focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 flex-1">
+                        <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Rows</span>
+                        <input
+                          type="number" min={1} max={24} value={grid.rows}
+                          onChange={(e) => onGrid({ ...grid, rows: Math.max(1, Number(e.target.value)) })}
+                          style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                          className="w-full text-sm px-3 py-2 rounded border focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <span style={{ color: 'var(--text-muted)' }} className="text-xs text-center">
+                      {grid.cols} × {grid.rows} = {grid.cols * grid.rows} blocks
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {template === 'Free Size' && (
+              <>
+                <UnitInput
+                  label="Width"
+                  valuePx={blockSize.w}
+                  minPx={MIN_BLOCK_PX}
+                  maxPx={usable.w}
+                  unit={unit}
+                  onChange={(px) => onBlockSize({ ...blockSize, w: px })}
+                />
+                <UnitInput
+                  label="Height"
+                  valuePx={blockSize.h}
+                  minPx={MIN_BLOCK_PX}
+                  maxPx={usable.h}
+                  unit={unit}
+                  onChange={(px) => onBlockSize({ ...blockSize, h: px })}
+                />
+              </>
+            )}
+
+          </div>
         )}
 
       </div>
