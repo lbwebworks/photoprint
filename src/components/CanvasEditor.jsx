@@ -343,6 +343,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                 url={url}
                 stageScale={stageScale}
                 isEditing={isEditing}
+                onSelect={() => { setSelectedIds(new Set([block.id])); }}
                 onEdit={() => { setEditingBlockId(block.id); setSelectedIds(new Set()) }}
                 onDone={() => setEditingBlockId(null)}
                 onRotate={() => handleRotateImage(block.id)}
@@ -363,7 +364,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
  *   shows an amber "Done" pill to exit
  * - Empty blocks: shows a dashed placeholder border (DOM only, never exported)
  */
-function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRotate, onRemove }) {
+function BlockOverlay({ block, url, stageScale, isEditing, onSelect, onEdit, onDone, onRotate, onRemove }) {
   const BTN_SIZE = 20
 
   function handleDragStart(e) {
@@ -376,12 +377,13 @@ function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRot
   return (
     <div
       className={`absolute ${isEditing ? '' : 'group'}`}
+      onClick={(e) => { e.stopPropagation(); if (!isEditing && url) onSelect?.() }}
       style={{
         left:          block.x * stageScale,
         top:           block.y * stageScale,
         width:         block.w * stageScale,
         height:        block.h * stageScale,
-        pointerEvents: 'none',
+        pointerEvents: 'auto',
         cursor:        isEditing ? 'default' : (url ? 'grab' : 'default'),
         // DOM-only placeholder for empty blocks — never captured by canvas export
         boxSizing:     'border-box',
@@ -396,19 +398,19 @@ function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRot
             onClick={(e) => { e.stopPropagation(); onEdit() }}
             title="Edit crop"
             style={{ position: 'absolute', top: 2, right: BTN_SIZE * 2 + 10, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
-            className="flex items-center justify-center rounded bg-black/60 hover:bg-amber-500 text-white text-xs leading-none opacity-80 hover:opacity-100 transition-opacity duration-150"
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-amber-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
           >✎</button>
           <button
             onClick={(e) => { e.stopPropagation(); onRotate() }}
             title="Rotate image 90°"
             style={{ position: 'absolute', top: 2, right: BTN_SIZE + 6, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
-            className="flex items-center justify-center rounded bg-black/60 hover:bg-indigo-500 text-white text-xs leading-none opacity-80 hover:opacity-100 transition-opacity duration-150"
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-indigo-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
           >↻</button>
           <button
             onClick={(e) => { e.stopPropagation(); onRemove() }}
             title="Remove image"
             style={{ position: 'absolute', top: 2, right: 2, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
-            className="flex items-center justify-center rounded bg-black/60 hover:bg-rose-600 text-white text-xs leading-none opacity-80 hover:opacity-100 transition-opacity duration-150"
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-rose-600 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
           >✕</button>
         </>
       )}
