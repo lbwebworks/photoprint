@@ -310,6 +310,8 @@ export default function App() {
           onCreatePreset={handleCreatePreset}
           onEditPreset={handleEditPreset}
           onDeletePreset={handleDeletePreset}
+          onPaperChange={setPaper}
+          onOrientationChange={setOrientation}
           onSwitchToCustom={handleSwitchToCustom}
           disabled={buildingPreset}
           onEnterPresetMode={handleEnterPresetMode}

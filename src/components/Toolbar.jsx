@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { GRID_OPTIONS, PAPER_SIZES, getUsable, mmToPx, pxToMm, cmToPx, pxToCm, inchToPx, pxToInch } from '../utils/layoutEngine'
+import { GRID_OPTIONS, PAPER_SIZES, ORIENTATIONS, getUsable, mmToPx, pxToMm, cmToPx, pxToCm, inchToPx, pxToInch } from '../utils/layoutEngine'
 import { IS_LOCAL, SAMPLE_PRESETS, publishPreset, unpublishPreset } from '../utils/presets'
 
 const LAYOUTS = ['Grid', 'Free Size']
@@ -188,6 +188,7 @@ export default function Toolbar({
   blockStyle, onBlockStyle,
   presets, activePresetId,
   onSelectPreset, onCreatePreset, onEditPreset, onDeletePreset,
+  onPaperChange, onOrientationChange,
   onSwitchToCustom,
   disabled = false,
   onEnterPresetMode,
@@ -399,23 +400,25 @@ export default function Toolbar({
         {sidebarMode === 'custom' && (
           <div className="flex flex-col gap-4">
 
-            {/* Unit selector */}
-            <div className="flex items-center justify-between text-xs">
-              <span style={{ color: 'var(--text-secondary)' }}>Unit</span>
-              <div className="flex rounded overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
-                {UNITS.map((u) => (
-                  <button
-                    key={u.value}
-                    onClick={() => setUnit(u.value)}
-                    className="px-2 py-1 text-xs transition"
-                    style={{
-                      background: unit === u.value ? '#6366f1' : 'var(--bg-elevated)',
-                      color:      unit === u.value ? 'white'   : 'var(--text-secondary)',
-                    }}
-                  >{u.label}</button>
+            <div className="grid gap-3">
+              <LabeledSelect label="Paper size" value={paper} onChange={(e) => onPaperChange?.(e.target.value)}>
+                {Object.entries(PAPER_SIZES).map(([key, { label }]) => (
+                  <option key={key} value={key}>{label}</option>
                 ))}
-              </div>
+              </LabeledSelect>
+
+              <LabeledSelect label="Orientation" value={orientation} onChange={(e) => onOrientationChange?.(e.target.value)}>
+                {ORIENTATIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </LabeledSelect>
             </div>
+
+            <LabeledSelect label="Unit" value={unit} onChange={(e) => setUnit(e.target.value)}>
+              {UNITS.map((u) => (
+                <option key={u.value} value={u.value}>{u.label}</option>
+              ))}
+            </LabeledSelect>
 
             <Divider />
 
