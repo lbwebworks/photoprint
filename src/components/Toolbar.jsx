@@ -190,6 +190,7 @@ export default function Toolbar({
   onSelectPreset, onCreatePreset, onEditPreset, onDeletePreset,
   onSwitchToCustom,
   disabled = false,
+  onEnterPresetMode,
 }) {
   const usable = getUsable(paper, orientation)
   // 'preset' | 'custom' — which tab is active
@@ -259,7 +260,18 @@ export default function Toolbar({
         {/* ── Preset / Custom tabs ── */}
         <div className="flex rounded overflow-hidden border shrink-0" style={{ borderColor: 'var(--border)' }}>
           <button
-            onClick={() => {setSidebarMode('preset'); onSelectPreset(activePresetId);}}
+            onClick={() => {
+              setSidebarMode('preset');
+              onEnterPresetMode?.();
+
+              if (activePresetId) {
+                onSelectPreset(activePresetId)
+              } else if (lastPresetId) {
+                onSelectPreset(lastPresetId)
+              } else {
+                onSelectPreset(null)
+              }
+            }}
             className="flex-1 text-xs py-1.5 transition"
             style={{
               background: sidebarMode === 'preset' ? '#6366f1' : 'var(--bg-elevated)',

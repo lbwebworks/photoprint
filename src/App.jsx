@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import './index.css'
 import MenuBar from './components/MenuBar'
 import Toolbar from './components/Toolbar'
@@ -25,6 +25,26 @@ function makePage(config = {}) {
   return { id: makePageId(), ...DEFAULT_PAGE_CONFIG, ...config }
 }
 
+function mergePresets(basePresets, storedPresets) {
+  const existingIds = new Set(basePresets.map((preset) => preset.id))
+  const extras = Array.isArray(storedPresets)
+    ? storedPresets.filter((preset) => preset && preset.id && !existingIds.has(preset.id))
+    : []
+  return [...basePresets, ...extras]
+}
+
+function getInitialPresets() {
+  const basePresets = loadPresets()
+  try {
+    const stored = localStorage.getItem('lk_presets')
+    if (!stored) return basePresets
+    const parsed = JSON.parse(stored)
+    return mergePresets(basePresets, parsed)
+  } catch {
+    return basePresets
+  }
+}
+
 export default function App() {
   const [paper, setPaper]               = useState('A4')
   const [orientation, setOrientation]   = useState('portrait')
@@ -33,6 +53,7 @@ export default function App() {
   const [editingPreset, setEditingPreset]   = useState(null)
   const [fillMode, setFillMode]             = useState('none')
   const [activePageHasImages, setActivePageHasImages] = useState(false)
+  const [lastPresetId, setLastPresetId] = useState(null)
 
   // Multi-page state — each page carries its own layout config
   const firstPage = useRef(makePage())
@@ -48,7 +69,7 @@ export default function App() {
   const activeRef = () => editorRefs.current[activePageId]
 
   const [theme, setTheme]     = usePersistedState('lk_theme', 'light')
-  const [presets, setPresets] = usePersistedState('lk_presets', loadPresets())
+  const [presets, setPresets] = usePersistedState('lk_presets', useMemo(getInitialPresets, []))
 
   const activePage = pages.find((p) => p.id === activePageId) ?? pages[0]
   const multiPage  = pages.length > 1
@@ -83,6 +104,9 @@ export default function App() {
   }
 
   function handleSelectPreset(id) {
+    if (id) {
+      setLastPresetId(id)
+    }
     if (!id) { 
       setPaper("A4")
       setOrientation("portrait")
@@ -243,6 +267,16 @@ export default function App() {
     })
   }
 
+  function handleEnterPresetMode() {
+    if (activePage?.activePresetId) {
+      handleSelectPreset(activePage.activePresetId)
+    } else if (lastPresetId) {
+      handleSelectPreset(lastPresetId)
+    } else {
+      handleSelectPreset(null)
+    }
+  }
+
   const dims = getPaperDims(paper, orientation)
 
   return (
@@ -278,6 +312,7 @@ export default function App() {
           onDeletePreset={handleDeletePreset}
           onSwitchToCustom={handleSwitchToCustom}
           disabled={buildingPreset}
+          onEnterPresetMode={handleEnterPresetMode}
         />
 
         <main className="flex-1 overflow-y-auto flex flex-col items-center p-6">

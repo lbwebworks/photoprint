@@ -91,6 +91,8 @@ const CanvasEditor = forwardRef(function CanvasEditor(
       blocks = slots
         ? slots
         : computeBlocksByGrid(preset.cols, preset.rows, paper, orientation, blockStyle.gap)
+    } else {
+      // No preset selected (None) — empty canvas
     }
   } else {
     blocks = grid.mode === 'custom'
