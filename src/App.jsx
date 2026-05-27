@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import './index.css'
 import MenuBar from './components/MenuBar'
 import Toolbar from './components/Toolbar'
@@ -70,7 +70,34 @@ export default function App() {
   const activeRef = () => editorRefs.current[activePageId]
 
   const [theme, setTheme]     = usePersistedState('lk_theme', 'light')
-  const [presets, setPresets] = usePersistedState('lk_presets', useMemo(getInitialPresets, []))
+  const [presets, setPresets] = useState(() => loadPresets())
+
+  // Merge shipped presets with any local extras stored in localStorage.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('lk_presets')
+      const base = loadPresets()
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        const existing = new Set(base.map((p) => p.id))
+        const extras = Array.isArray(parsed) ? parsed.filter((p) => p && p.id && !existing.has(p.id)) : []
+        const merged = [...base, ...extras]
+        setPresets(merged)
+        // normalize stored value so future loads match merged state
+        try { localStorage.setItem('lk_presets', JSON.stringify(merged)) } catch {}
+      } else {
+        try { localStorage.setItem('lk_presets', JSON.stringify(base)) } catch {}
+        setPresets(base)
+      }
+    } catch {
+      setPresets(loadPresets())
+    }
+  }, [])
+
+  // Persist presets whenever they change
+  useEffect(() => {
+    try { localStorage.setItem('lk_presets', JSON.stringify(presets)) } catch {}
+  }, [presets])
 
   const activePage = pages.find((p) => p.id === activePageId) ?? pages[0]
   const multiPage  = pages.length > 1
