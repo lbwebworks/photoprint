@@ -383,7 +383,7 @@ function BlockOverlay({ block, url, stageScale, isEditing, onSelect, onEdit, onD
         top:           block.y * stageScale,
         width:         block.w * stageScale,
         height:        block.h * stageScale,
-        pointerEvents: 'auto',
+        pointerEvents: isEditing ? 'none' : 'auto',
         cursor:        isEditing ? 'default' : (url ? 'grab' : 'default'),
         // DOM-only placeholder for empty blocks — never captured by canvas export
         boxSizing:     'border-box',
