@@ -1,6 +1,6 @@
 import { exportPNG, exportPDF, exportAllPNG } from '../utils/exportUtils'
 
-export default function MenuBar({ pages, editorRefs, paper, orientation, theme, onTheme, onStartNew, disabled = false }) {
+export default function MenuBar({ pages, editorRefs, paper, orientation, theme, onTheme, disabled = false }) {
   function getAllEditors() {
     return (pages ?? [])
       .map((p) => editorRefs?.current?.[p.id]?.current)
@@ -45,14 +45,6 @@ export default function MenuBar({ pages, editorRefs, paper, orientation, theme, 
       </span>
 
       <div className={`flex items-center gap-2 ${disabled ? 'opacity-50' : ''}`}>
-        <button
-          type="button"
-          onClick={onStartNew}
-          style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-          className="border text-sm px-3 py-1.5 rounded transition hover:opacity-80"
-        >
-          Start New
-        </button>
         <button
           type="button"
           disabled={disabled}

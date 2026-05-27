@@ -78,20 +78,6 @@ export default function App() {
     setPages((prev) => prev.map((p) => p.id === activePageId ? { ...p, ...patch } : p))
   }
 
-  // Start New — prompt then reset pages only, keep images
-  function handleStartNew() {
-    const hasContent = pages.some((p) =>
-      editorRefs.current[p.id]?.current?.hasImages?.()
-    )
-    if (hasContent && !window.confirm('Start new? This will clear all pages. Your image library will be kept.')) return
-    setPaper(null)
-    setOrientation(null)
-    setPages([])
-    setActivePageId(null)
-    setActivePageHasImages(false)
-    editorRefs.current = {}
-  }
-
   function handleBlockStyle(v)  { updateActivePage({ blockStyle: v }) }
   function handleTemplate(v)    { updateActivePage({ template: v, customTemplate: v, rotatedSlots: null }) }
   function handleGrid(v)        { updateActivePage({ grid: v }) }
@@ -288,7 +274,6 @@ export default function App() {
         orientation={orientation}
         theme={theme}
         onTheme={setTheme}
-        onStartNew={handleStartNew}
         disabled={buildingPreset}
       />
 
