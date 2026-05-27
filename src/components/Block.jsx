@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Group, Rect, Image as KonvaImage } from 'react-konva'
-import { getFillScale, clampOffset } from '../utils/imageUtils'
+import { getFillScale, getFitScale, clampOffset } from '../utils/imageUtils'
 
-function BlockImage({ url, blockW, blockH, interactive, rotation = 0 }) {
+function BlockImage({ url, blockW, blockH, interactive, rotation = 0, imageFitMode = 'fill' }) {
   const [img, setImg] = useState(null)
   const [rotatedImg, setRotatedImg] = useState(null)
   const [zoom, setZoom] = useState(1)
@@ -40,11 +40,17 @@ function BlockImage({ url, blockW, blockH, interactive, rotation = 0 }) {
     }
   }, [img, rotation])
 
+  useEffect(() => {
+    if (!rotatedImg) return
+    setOffset({ x: 0, y: 0 })
+  }, [imageFitMode, rotatedImg])
+
   if (!rotatedImg) return null
 
-  // Standard fill logic on the rotated image
-  const fillScale = getFillScale(rotatedImg.width, rotatedImg.height, blockW, blockH)
-  const effectiveScale = fillScale * zoom
+  const baseScale = imageFitMode === 'fit'
+    ? getFitScale(rotatedImg.width, rotatedImg.height, blockW, blockH)
+    : getFillScale(rotatedImg.width, rotatedImg.height, blockW, blockH)
+  const effectiveScale = baseScale * zoom
   const drawW = rotatedImg.width  * effectiveScale
   const drawH = rotatedImg.height * effectiveScale
 
@@ -79,7 +85,7 @@ function BlockImage({ url, blockW, blockH, interactive, rotation = 0 }) {
   )
 }
 
-export default function Block({ block, url, blockStyle, isSelected, isDragOver, isEditing, rotation = 0, onSelect, onRemoveImage }) {
+export default function Block({ block, url, blockStyle, isSelected, isDragOver, isEditing, rotation = 0, imageFitMode = 'fill', onSelect, onRemoveImage }) {
   const { borderWidth = 0, borderColor = '#000000' } = blockStyle || {}
 
   const normalStroke  = borderWidth > 0 ? borderColor : '#c0c8d8'
@@ -112,7 +118,7 @@ export default function Block({ block, url, blockStyle, isSelected, isDragOver, 
           width={block.w} height={block.h}
           fill={url ? '#fefeff' : 'white'}
         />
-        {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} rotation={rotation} />}
+        {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} rotation={rotation} imageFitMode={imageFitMode} />}
         {/* Border — only when block has an image or user set a border width */}
         {(url || borderWidth > 0) && (
           <Rect

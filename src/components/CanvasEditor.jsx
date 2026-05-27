@@ -33,6 +33,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
     rotatedSlots = null,         // overrides preset.slots after a rotation
     onSelectionChange = null,
     onImagesChange = null,       // called with (hasImages: bool) when block image state changes
+    imageFitMode = 'fill',
   },
   ref
 ) {
@@ -322,6 +323,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                     isDragOver={dragOverBlockId === block.id}
                     isEditing={editingBlockId === block.id}
                     rotation={blockRotations[block.id] ?? 0}
+                    imageFitMode={imageFitMode}
                     onSelect={handleBlockSelect}
                     onRemoveImage={handleRemoveImage}
                   />
@@ -373,15 +375,13 @@ function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRot
 
   return (
     <div
-      draggable={!!url && !isEditing}
-      onDragStart={handleDragStart}
       className={`absolute ${isEditing ? '' : 'group'}`}
       style={{
         left:          block.x * stageScale,
         top:           block.y * stageScale,
         width:         block.w * stageScale,
         height:        block.h * stageScale,
-        pointerEvents: isEditing ? 'none' : 'auto',
+        pointerEvents: 'none',
         cursor:        isEditing ? 'default' : (url ? 'grab' : 'default'),
         // DOM-only placeholder for empty blocks — never captured by canvas export
         boxSizing:     'border-box',
@@ -396,19 +396,19 @@ function BlockOverlay({ block, url, stageScale, isEditing, onEdit, onDone, onRot
             onClick={(e) => { e.stopPropagation(); onEdit() }}
             title="Edit crop"
             style={{ position: 'absolute', top: 2, right: BTN_SIZE * 2 + 10, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
-            className="flex items-center justify-center rounded bg-black/60 hover:bg-amber-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-amber-500 text-white text-xs leading-none opacity-80 hover:opacity-100 transition-opacity duration-150"
           >✎</button>
           <button
             onClick={(e) => { e.stopPropagation(); onRotate() }}
             title="Rotate image 90°"
             style={{ position: 'absolute', top: 2, right: BTN_SIZE + 6, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
-            className="flex items-center justify-center rounded bg-black/60 hover:bg-indigo-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-indigo-500 text-white text-xs leading-none opacity-80 hover:opacity-100 transition-opacity duration-150"
           >↻</button>
           <button
             onClick={(e) => { e.stopPropagation(); onRemove() }}
             title="Remove image"
             style={{ position: 'absolute', top: 2, right: 2, width: BTN_SIZE, height: BTN_SIZE, pointerEvents: 'auto' }}
-            className="flex items-center justify-center rounded bg-black/60 hover:bg-rose-600 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+            className="flex items-center justify-center rounded bg-black/60 hover:bg-rose-600 text-white text-xs leading-none opacity-80 hover:opacity-100 transition-opacity duration-150"
           >✕</button>
         </>
       )}

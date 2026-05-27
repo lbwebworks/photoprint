@@ -52,6 +52,7 @@ export default function App() {
   const [buildingPreset, setBuildingPreset] = useState(false)
   const [editingPreset, setEditingPreset]   = useState(null)
   const [fillMode, setFillMode]             = useState('none')
+  const [imageFitMode, setImageFitMode]     = useState('fill')
   const [activePageHasImages, setActivePageHasImages] = useState(false)
   const [lastPresetId, setLastPresetId] = useState(null)
 
@@ -419,6 +420,7 @@ export default function App() {
                           ref={getEditorRef(page.id)}
                           images={images}
                           fillMode={fillMode}
+                          imageFitMode={imageFitMode}
                           imageOffset={imageOffset}
                           paper={paper}
                           orientation={orientation}
@@ -445,7 +447,14 @@ export default function App() {
           )}
         </main>
 
-        <ImagePanel images={images} onRemove={handleRemoveImage} onFiles={handleFiles} disabled={buildingPreset} />
+        <ImagePanel
+          images={images}
+          onRemove={handleRemoveImage}
+          onFiles={handleFiles}
+          imageFitMode={imageFitMode}
+          onImageFitModeChange={setImageFitMode}
+          disabled={buildingPreset}
+        />
       </div>
     </div>
   )
