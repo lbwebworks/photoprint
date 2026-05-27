@@ -32,6 +32,9 @@ export const PAPER_SIZES = {
   A4:    { label: 'A4',    width: mmToPx(210), height: mmToPx(297) },
   A5:    { label: 'A5',    width: mmToPx(148), height: mmToPx(210) },
   A6:    { label: 'A6',    width: mmToPx(105), height: mmToPx(148) },
+  '5R':  { label: '5R',   width: inchToPx(5),   height: inchToPx(7) },
+  '4R':  { label: '4R',   width: inchToPx(4),   height: inchToPx(6) },
+  '3R':  { label: '3R',   width: inchToPx(3.5), height: inchToPx(5) },
   Long:  { label: 'Long',  width: inchToPx(8.5), height: inchToPx(14) },
   Short: { label: 'Short', width: inchToPx(8.5), height: inchToPx(11) },
 }
