@@ -33,7 +33,12 @@ export default function MenuBar({ pages, editorRefs, paper, orientation, theme, 
     if (disabled) return
     deselectAllPages()
     setTimeout(() => {
-      exportPDF(getAllStageRefs(), paper, orientation)
+      const refs = getAllStageRefs()
+      const pageConfigs = pages.map((page) => ({
+        paper: page.paper ?? paper,
+        orientation: page.orientation ?? orientation,
+      }))
+      exportPDF(refs, pageConfigs, paper, orientation)
     }, 50)
   }
 
