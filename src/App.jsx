@@ -69,9 +69,21 @@ export default function App() {
   }, [])
 
   const activeRef = () => editorRefs.current[activePageId]
-
   const [theme, setTheme]     = usePersistedState('lk_theme', 'light')
   const [presets, setPresets] = useState(() => loadPresets())
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+  const moreMenuRef = useRef(null)
+
+  useEffect(() => {
+    if (!moreMenuOpen) return
+    function handleClickOutside(event) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setMoreMenuOpen(false)
+      }
+    }
+    window.addEventListener('mousedown', handleClickOutside)
+    return () => window.removeEventListener('mousedown', handleClickOutside)
+  }, [moreMenuOpen])
 
   // Merge shipped presets with any local extras stored in localStorage.
   useEffect(() => {
@@ -289,6 +301,18 @@ export default function App() {
     })
   }
 
+  function handleDeleteExtraPages() {
+    setPages((prev) => {
+      if (prev.length <= 1) return prev
+      const first = prev[0]
+      const extra = prev.slice(1)
+      extra.forEach((page) => delete editorRefs.current[page.id])
+      setActivePageId(first.id)
+      setActivePageHasImages(editorRefs.current[first.id]?.current?.hasImages?.() ?? false)
+      return [first]
+    })
+  }
+
   function handleEnterPresetMode() {
     if (activePage?.activePresetId) {
       handleSelectPreset(activePage.activePresetId)
@@ -363,55 +387,22 @@ export default function App() {
             <>
               {/* Print mode settings bar */}
               <div className="flex items-center gap-3 w-full max-w-2xl mb-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span style={{ color: 'var(--text-secondary)' }} className="text-xs whitespace-nowrap">Fill Mode</span>
-                  <select
-                    value={fillMode}
-                    onChange={(e) => setFillMode(e.target.value)}
-                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-                    className="text-xs px-2 py-1.5 rounded border focus:outline-none cursor-pointer"
-                  >
-                    <option value="none">None</option>
-                    <option value="autofill">Auto Fill</option>
-                    <option value="autofill-all">Auto Fill All</option>
-                  </select>
-                </div>
                 <button
-                  onClick={() => {
-                    // Clear All: wipe every page and reset fill mode
-                    pages.forEach((p) => editorRefs.current[p.id]?.current?.clearAll())
-                    setFillMode('none')
-                    setActivePageHasImages(false)
-                  }}
+                  onClick={handleAddPage}
                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                   className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
                 >
-                  Clear All
+                  + Add Page
                 </button>
                 <button
                   disabled={!activePageHasImages}
                   onClick={() => {
-                    // Clear Page: wipe only the active page
                     activeRef()?.current?.clearAll()
                   }}
                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                   className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Clear Page
-                </button>
-                <button
-                  onClick={() => activeRef()?.current?.shuffle()}
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
-                >
-                  Shuffle
-                </button>
-                <button
-                  onClick={handleAddPage}
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80 ml-auto"
-                >
-                  + Add Page
                 </button>
                 <button
                   onClick={handleRotate}
@@ -421,6 +412,52 @@ export default function App() {
                 >
                   ↻ Rotate
                 </button>
+                <button
+                  onClick={() => activeRef()?.current?.shuffle()}
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
+                >
+                  Shuffle
+                </button>
+                <div className="relative ml-auto" ref={moreMenuRef}>
+                  <button
+                    onClick={() => setMoreMenuOpen((open) => !open)}
+                    aria-expanded={moreMenuOpen}
+                    aria-haspopup="menu"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                    className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
+                  >
+                    ⋯
+                  </button>
+                  {moreMenuOpen && (
+                    <div
+                      className="absolute right-0 mt-2 w-44 rounded border bg-[var(--bg-surface)] shadow-lg"
+                      style={{ borderColor: 'var(--border)', zIndex: 50 }}
+                    >
+                      <button
+                        onClick={() => {
+                          pages.forEach((p) => editorRefs.current[p.id]?.current?.clearAll())
+                          setFillMode('none')
+                          setActivePageHasImages(false)
+                          setMoreMenuOpen(false)
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs transition hover:bg-[var(--bg-elevated)]"
+                      >
+                        Clear All
+                      </button>
+                      <button
+                        disabled={pages.length <= 1}
+                        onClick={() => {
+                          handleDeleteExtraPages()
+                          setMoreMenuOpen(false)
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs transition hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Delete Extra Pages
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Pages */}
@@ -503,6 +540,8 @@ export default function App() {
           images={images}
           onRemove={handleRemoveImage}
           onFiles={handleFiles}
+          fillMode={fillMode}
+          onFillModeChange={setFillMode}
           imageFitMode={imageFitMode}
           onImageFitModeChange={setImageFitMode}
           disabled={buildingPreset}

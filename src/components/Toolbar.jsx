@@ -44,7 +44,7 @@ function fromDisplay(val, unit) {
 
 function stepFor(unit) { return unit === 'px' ? 1 : 0.1 }
 
-function LabeledSelect({ label, value, onChange, children, disabled = false }) {
+function LabeledSelect({ label, value, onChange, children, disabled = false, title }) {
   return (
     <div className="flex flex-col gap-1">
       <span style={{ color: 'var(--text-secondary)' }} className="text-xs">{label}</span>
@@ -52,6 +52,7 @@ function LabeledSelect({ label, value, onChange, children, disabled = false }) {
         value={value}
         onChange={onChange}
         disabled={disabled}
+        title={title}
         style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
         className={`w-full text-sm px-3 py-2 rounded border focus:outline-none ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       >
@@ -409,7 +410,13 @@ export default function Toolbar({
           <div className="flex flex-col gap-4">
 
             <div className="grid gap-3">
-              <LabeledSelect label="Paper size" value={paper} onChange={(e) => onPaperChange?.(e.target.value)} disabled={multiPage}>
+              <LabeledSelect
+                label="Paper size"
+                value={paper}
+                onChange={(e) => onPaperChange?.(e.target.value)}
+                disabled={multiPage}
+                title={multiPage ? 'Paper size cannot be changed when multiple pages are active.' : undefined}
+              >
                 {Object.entries(PAPER_SIZES).map(([key, { label }]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}

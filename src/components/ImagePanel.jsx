@@ -6,7 +6,7 @@ const DEFAULT_THUMB = 100
 const MIN_PANEL = 180
 const DEFAULT_PANEL = 328  // 3 × 100 + 2×6 gaps + 2×8 padding
 
-export default function ImagePanel({ images, onRemove, onFiles, imageFitMode = 'fill', onImageFitModeChange, disabled = false }) {
+export default function ImagePanel({ images, onRemove, onFiles, fillMode = 'none', onFillModeChange, imageFitMode = 'fill', onImageFitModeChange, disabled = false }) {
   const [thumbSize, setThumbSize] = useState(DEFAULT_THUMB)
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL)
   const isDragging = useRef(false)
@@ -70,7 +70,21 @@ export default function ImagePanel({ images, onRemove, onFiles, imageFitMode = '
       {/* Header */}
       <div style={{ borderColor: 'var(--border)' }} className="px-3 py-3 border-b flex flex-col gap-3 shrink-0">
         <div className="flex flex-col gap-2">
-          <span style={{ color: 'var(--text-secondary)' }} className="text-xs uppercase tracking-[0.16em]">Image Fit</span>
+          <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Fill Mode</span>
+          <select
+            value={fillMode}
+            onChange={(e) => onFillModeChange?.(e.target.value)}
+            style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+            className="w-full text-sm px-2 py-1.5 rounded border focus:outline-none cursor-pointer"
+          >
+            <option value="none">None</option>
+            <option value="autofill">Auto Fill</option>
+            <option value="autofill-all">Auto Fill All</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Image Fit</span>
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 text-xs">
               <input
