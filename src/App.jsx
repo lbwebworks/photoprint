@@ -69,21 +69,9 @@ export default function App() {
   }, [])
 
   const activeRef = () => editorRefs.current[activePageId]
+  const getEditor = (pageId) => editorRefs.current[pageId]?.current
   const [theme, setTheme]     = usePersistedState('lk_theme', 'light')
   const [presets, setPresets] = useState(() => loadPresets())
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
-  const moreMenuRef = useRef(null)
-
-  useEffect(() => {
-    if (!moreMenuOpen) return
-    function handleClickOutside(event) {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
-        setMoreMenuOpen(false)
-      }
-    }
-    window.addEventListener('mousedown', handleClickOutside)
-    return () => window.removeEventListener('mousedown', handleClickOutside)
-  }, [moreMenuOpen])
 
   // Merge shipped presets with any local extras stored in localStorage.
   useEffect(() => {
@@ -209,8 +197,9 @@ export default function App() {
     setBuildingPreset(true)
   }
 
-  function handleRotate() {
-    const pageOrientation = activePage?.orientation ?? orientation
+  function handleRotate(pageId = activePageId) {
+    const page = pages.find((p) => p.id === pageId) ?? activePage
+    const pageOrientation = page?.orientation ?? orientation
     const newOrientation = pageOrientation === 'portrait' ? 'landscape' : 'portrait'
     const { width: oldW, height: oldH } = getPaperDims(paper, pageOrientation)
 
@@ -219,10 +208,10 @@ export default function App() {
       return { ...b, x: oldH - b.y - b.h, y: b.x, w: b.h, h: b.w }
     }
 
-    const pageSnapshot = editorRefs.current[activePageId]?.current?.getRotateSnapshot?.() ?? null
+    const pageSnapshot = getEditor(pageId)?.getRotateSnapshot?.() ?? null
 
     setPages((prev) => prev.map((page) => {
-      if (page.id !== activePageId) return page
+      if (page.id !== pageId) return page
       if (page.template !== 'Preset') {
         return { ...page, orientation: newOrientation }
       }
@@ -241,11 +230,13 @@ export default function App() {
       }
     }))
 
-    setOrientation(newOrientation)
+    if (pageId === activePageId) {
+      setOrientation(newOrientation)
+    }
 
     setTimeout(() => {
       if (!pageSnapshot || Object.keys(pageSnapshot.urlMap).length === 0) return
-      const editor = editorRefs.current[activePageId]?.current
+      const editor = getEditor(pageId)
       if (!editor) return
 
       const { urlMap, blocks: oldBlocks } = pageSnapshot
@@ -394,69 +385,26 @@ export default function App() {
                 >
                   + Add Page
                 </button>
-                <button
-                  disabled={!activePageHasImages}
-                  onClick={() => {
-                    activeRef()?.current?.clearAll()
-                  }}
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Clear Page
-                </button>
-                <button
-                  onClick={handleRotate}
-                  title="Rotate paper 90° clockwise"
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
-                >
-                  ↻ Rotate
-                </button>
-                <button
-                  onClick={() => activeRef()?.current?.shuffle()}
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-                  className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
-                >
-                  Shuffle
-                </button>
-                <div className="relative ml-auto" ref={moreMenuRef}>
+                <div className="flex items-center gap-2 ml-auto">
                   <button
-                    onClick={() => setMoreMenuOpen((open) => !open)}
-                    aria-expanded={moreMenuOpen}
-                    aria-haspopup="menu"
+                    onClick={() => {
+                      pages.forEach((p) => editorRefs.current[p.id]?.current?.clearAll())
+                      setFillMode('none')
+                      setActivePageHasImages(false)
+                    }}
                     style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                     className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
                   >
-                    ⋯
+                    Clear All
                   </button>
-                  {moreMenuOpen && (
-                    <div
-                      className="absolute right-0 mt-2 w-44 rounded border bg-[var(--bg-surface)] shadow-lg"
-                      style={{ borderColor: 'var(--border)', zIndex: 50 }}
-                    >
-                      <button
-                        onClick={() => {
-                          pages.forEach((p) => editorRefs.current[p.id]?.current?.clearAll())
-                          setFillMode('none')
-                          setActivePageHasImages(false)
-                          setMoreMenuOpen(false)
-                        }}
-                        className="w-full text-left px-3 py-2 text-xs transition hover:bg-[var(--bg-elevated)]"
-                      >
-                        Clear All
-                      </button>
-                      <button
-                        disabled={pages.length <= 1}
-                        onClick={() => {
-                          handleDeleteExtraPages()
-                          setMoreMenuOpen(false)
-                        }}
-                        className="w-full text-left px-3 py-2 text-xs transition hover:bg-[var(--bg-elevated)] disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Delete Extra Pages
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    disabled={pages.length <= 1}
+                    onClick={handleDeleteExtraPages}
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                    className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Delete Extra Pages
+                  </button>
                 </div>
               </div>
 
@@ -484,16 +432,42 @@ export default function App() {
                           <span className="w-2 h-2 rounded-full" style={{ background: activePageId === page.id ? '#6366f1' : 'var(--border)' }} />
                           Page {index + 1}
                         </button>
-                        {pages.length > 1 && (
+                        <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleRemovePage(page.id)}
-                            title="Remove page"
-                            style={{ color: 'var(--text-muted)' }}
-                            className="text-xs w-5 h-5 flex items-center justify-center rounded hover:text-rose-500 transition"
-                          >✕</button>
-                        )}
+                            onClick={() => handleRotate(page.id)}
+                            title="Rotate paper 90° clockwise"
+                            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                            className="text-sm w-6 h-6 rounded border transition hover:opacity-80"
+                          >
+                            ↻
+                          </button>
+                          <button
+                            onClick={() => getEditor(page.id)?.shuffle()}
+                            title="Shuffle images"
+                            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)', fontFamily: 'system-ui, sans-serif' }}
+                            className="text-sm w-6 h-6 rounded border transition hover:opacity-80"
+                          >
+                            ⇄
+                          </button>
+                          <button
+                            disabled={!(editorRefs.current[page.id]?.current?.hasImages?.() ?? false)}
+                            onClick={() => handleClearPage(page.id)}
+                            title="Clear page"
+                            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                            className="text-sm w-6 h-6 rounded border transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            🗑
+                          </button>
+                          {pages.length > 1 && (
+                            <button
+                              onClick={() => handleRemovePage(page.id)}
+                              title="Remove page"
+                              style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                              className="text-xs w-5 h-5 flex items-center justify-center rounded border transition hover:opacity-80"
+                            >✕</button>
+                          )}
+                        </div>
                       </div>
-
                       <div
                         className="shadow-2xl"
                         style={{ outline: activePageId === page.id ? '2px solid #6366f1' : '2px solid transparent', borderRadius: 2 }}
@@ -533,6 +507,17 @@ export default function App() {
                   )
                 })}
               </div>
+              {pages.length >= 2 && (
+                <div className="flex justify-center mt-6">
+                  <button
+                    onClick={handleAddPage}
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+                    className="text-xs px-3 py-1.5 rounded border transition hover:opacity-80"
+                  >
+                    + Add Page
+                  </button>
+                </div>
+              )}
             </>
           )}
         </main>
