@@ -413,6 +413,8 @@ function BlockOverlay({ block, url, stageScale, isEditing, onSelect, onEdit, onD
   return (
     <div
       className={`absolute ${isEditing ? '' : 'group'}`}
+      draggable={!isEditing && !!url}
+      onDragStart={handleDragStart}
       onClick={(e) => { e.stopPropagation(); if (!isEditing && url) onSelect?.() }}
       style={{
         left:          block.x * stageScale,
