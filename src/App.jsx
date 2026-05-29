@@ -17,6 +17,7 @@ const DEFAULT_PAGE_CONFIG = {
   grid:           { mode: 'square', slots: 16, cols: 4, rows: 4 },
   blockSize:      { w: mmToPx(35), h: mmToPx(45) },
   blockStyle:     { borderWidth: 0, borderColor: '#000000', gap: 0 },
+  orientation:    'portrait',
   activePresetId: null,
   rotatedSlots:   null,
 }
@@ -135,10 +136,12 @@ export default function App() {
       return
     }
 
-    // Apply preset's paper/orientation if set (no prompt — user can rotate freely)
-    if (!multiPage) {
-      if (preset.paper)       setPaper(preset.paper)
-      if (preset.orientation) setOrientation(preset.orientation)
+    if (preset.paper) {
+      setPaper(preset.paper)
+    }
+    if (preset.orientation) {
+      setOrientation(preset.orientation)
+      updateActivePage({ orientation: preset.orientation })
     }
 
     updateActivePage({
@@ -195,64 +198,65 @@ export default function App() {
   }
 
   function handleRotate() {
-    const newOrientation = orientation === 'portrait' ? 'landscape' : 'portrait'
-    const { width: oldW, height: oldH } = getPaperDims(paper, orientation)
+    const pageOrientation = activePage?.orientation ?? orientation
+    const newOrientation = pageOrientation === 'portrait' ? 'landscape' : 'portrait'
+    const { width: oldW, height: oldH } = getPaperDims(paper, pageOrientation)
 
     // 90° CW block transform on oldW×oldH paper
     function rotateBlock(b) {
       return { ...b, x: oldH - b.y - b.h, y: b.x, w: b.h, h: b.w }
     }
 
-    // Snapshot current effective urls per page before anything changes
-    const snapshots = pages.map((page) => ({
-      id:       page.id,
-      template: page.template,
-      snap:     editorRefs.current[page.id]?.current?.getRotateSnapshot?.() ?? null,
-    }))
+    const pageSnapshot = editorRefs.current[activePageId]?.current?.getRotateSnapshot?.() ?? null
 
-    // For Preset pages with fixed slots, store rotated slot positions in page config
     setPages((prev) => prev.map((page) => {
-      if (page.template !== 'Preset') return page
+      if (page.id !== activePageId) return page
+      if (page.template !== 'Preset') {
+        return { ...page, orientation: newOrientation }
+      }
+
       const currentSlots = page.rotatedSlots
         ?? presets.find((p) => p.id === page.activePresetId)?.slots
         ?? null
-      if (!currentSlots) return page  // grid-derived — recomputes automatically
-      return { ...page, rotatedSlots: currentSlots.map(rotateBlock) }
+      if (!currentSlots) {
+        return { ...page, orientation: newOrientation }
+      }
+
+      return {
+        ...page,
+        orientation: newOrientation,
+        rotatedSlots: currentSlots.map(rotateBlock),
+      }
     }))
 
-    // Toggle orientation — triggers re-render with new paper dims + rotated slots
     setOrientation(newOrientation)
 
-    // After re-render, remap block images using rotated block centers
     setTimeout(() => {
-      snapshots.forEach(({ id, snap }) => {
-        if (!snap || Object.keys(snap.urlMap).length === 0) return
-        const editor = editorRefs.current[id]?.current
-        if (!editor) return
+      if (!pageSnapshot || Object.keys(pageSnapshot.urlMap).length === 0) return
+      const editor = editorRefs.current[activePageId]?.current
+      if (!editor) return
 
-        const { urlMap, blocks: oldBlocks } = snap
-        const newSnap = editor.getRotateSnapshot?.()
-        if (!newSnap) return
-        const newBlocks = newSnap.blocks
+      const { urlMap, blocks: oldBlocks } = pageSnapshot
+      const newSnap = editor.getRotateSnapshot?.()
+      if (!newSnap) return
+      const newBlocks = newSnap.blocks
 
-        const newMap = {}
-        oldBlocks.forEach((oldBlock) => {
-          const url = urlMap[oldBlock.id]
-          if (!url) return
-          // Rotate this block's center 90° CW to find where it lands on the new paper
-          const cx = oldBlock.x + oldBlock.w / 2
-          const cy = oldBlock.y + oldBlock.h / 2
-          const rotX = oldH - cy   // CW: newX = oldH - oldY
-          const rotY = cx           // CW: newY = oldX
-          const target = newBlocks.find((b) =>
-            rotX >= b.x && rotX <= b.x + b.w &&
-            rotY >= b.y && rotY <= b.y + b.h
-          )
-          if (target) newMap[target.id] = url
-        })
-
-        if (Object.keys(newMap).length > 0) editor.restoreBlockImages(newMap)
+      const newMap = {}
+      oldBlocks.forEach((oldBlock) => {
+        const url = urlMap[oldBlock.id]
+        if (!url) return
+        const cx = oldBlock.x + oldBlock.w / 2
+        const cy = oldBlock.y + oldBlock.h / 2
+        const rotX = oldH - cy
+        const rotY = cx
+        const target = newBlocks.find((b) =>
+          rotX >= b.x && rotX <= b.x + b.w &&
+          rotY >= b.y && rotY <= b.y + b.h
+        )
+        if (target) newMap[target.id] = url
       })
+
+      if (Object.keys(newMap).length > 0) editor.restoreBlockImages(newMap)
     }, 50)
   }
 
@@ -266,7 +270,7 @@ export default function App() {
   }
 
   function handleAddPage() {
-    const newPage = makePage()
+    const newPage = makePage({ orientation: activePage?.orientation ?? orientation })
     setPages((prev) => [...prev, newPage])
     setActivePageId(newPage.id)
     setActivePageHasImages(false)
@@ -295,7 +299,14 @@ export default function App() {
     }
   }
 
-  const dims = getPaperDims(paper, orientation)
+  useEffect(() => {
+    if (!activePage?.orientation) return
+    if (activePage.orientation !== orientation) {
+      setOrientation(activePage.orientation)
+    }
+  }, [activePage?.orientation, orientation])
+
+  const dims = getPaperDims(paper, activePage?.orientation ?? orientation)
 
   return (
     <div className={`${theme} h-screen flex flex-col overflow-hidden`} style={{ background: 'var(--bg-base)' }}>
@@ -312,7 +323,7 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         <Toolbar
           paper={paper}
-          orientation={orientation}
+          orientation={activePage?.orientation ?? orientation}
           template={activePage?.template ?? DEFAULT_PAGE_CONFIG.template}
           onTemplate={handleTemplate}
           grid={activePage?.grid ?? DEFAULT_PAGE_CONFIG.grid}
@@ -328,7 +339,10 @@ export default function App() {
           onEditPreset={handleEditPreset}
           onDeletePreset={handleDeletePreset}
           onPaperChange={setPaper}
-          onOrientationChange={setOrientation}
+          onOrientationChange={(value) => {
+            setOrientation(value)
+            updateActivePage({ orientation: value })
+          }}
           onSwitchToCustom={handleSwitchToCustom}
           disabled={buildingPreset}
           multiPage={multiPage}
@@ -455,7 +469,7 @@ export default function App() {
                           imageFitMode={imageFitMode}
                           imageOffset={imageOffset}
                           paper={paper}
-                          orientation={orientation}
+                          orientation={page.orientation ?? orientation}
                           template={page.template}
                           grid={page.grid}
                           blockSize={page.blockSize}
@@ -468,9 +482,15 @@ export default function App() {
                           }}
                         />
                       </div>
-                      <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-                        {`${dims.width} × ${dims.height} px — ${PAPER_SIZES[paper].label} ${orientation} @ 300 DPI`}
-                      </p>
+                      {(() => {
+                        const pageOrientation = page.orientation ?? orientation
+                        const pageDims = getPaperDims(paper, pageOrientation)
+                        return (
+                          <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                            {`${pageDims.width} × ${pageDims.height} px — ${PAPER_SIZES[paper].label} ${pageOrientation} @ 300 DPI`}
+                          </p>
+                        )
+                      })()}
                     </div>
                   )
                 })}
