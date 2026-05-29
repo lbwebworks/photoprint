@@ -7,7 +7,7 @@
  */
 
 import { jsPDF } from 'jspdf'
-import { getPaperDims } from './layoutEngine'
+import { pxToMm, getPaperDims } from './layoutEngine'
 
 function stageToDataURL(stageRef) {
   const stage = stageRef.current
@@ -35,30 +35,20 @@ export function exportAllPNG(stageRefs) {
   })
 }
 
-// Map our paper keys to jsPDF format strings
-const PDF_FORMAT = {
-  A3:    'a3',
-  A4:    'a4',
-  A5:    'a5',
-  A6:    'a6',
-  Long:  'legal',
-  Short: 'letter',
-}
 
 /** Export all pages as a single multi-page PDF */
 export function exportPDF(stageRefs, paperKey = 'A4', orientation = 'portrait') {
   if (!stageRefs.length) return
 
-  const format = PDF_FORMAT[paperKey] ?? paperKey.toLowerCase()
-  const { width: pageW } = getPaperDims(paperKey, orientation)
-  const pdf = new jsPDF({ orientation, unit: 'mm', format })
-  const mmW = pdf.internal.pageSize.getWidth()
-  const mmH = pdf.internal.pageSize.getHeight()
+  const { width: pageW, height: pageH } = getPaperDims(paperKey, orientation)
+  const mmW = Number(pxToMm(pageW))
+  const mmH = Number(pxToMm(pageH))
+  const pdf = new jsPDF({ orientation, unit: 'mm', format: [mmW, mmH] })
 
   stageRefs.forEach((stageRef, i) => {
     const pixelRatio = pageW / stageRef.current.width()
     const dataURL = stageRef.current.toDataURL({ pixelRatio, mimeType: 'image/png' })
-    if (i > 0) pdf.addPage(format, orientation)
+    if (i > 0) pdf.addPage([mmW, mmH], orientation)
     pdf.addImage(dataURL, 'PNG', 0, 0, mmW, mmH)
   })
 
