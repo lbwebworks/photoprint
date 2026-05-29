@@ -44,15 +44,16 @@ function fromDisplay(val, unit) {
 
 function stepFor(unit) { return unit === 'px' ? 1 : 0.1 }
 
-function LabeledSelect({ label, value, onChange, children }) {
+function LabeledSelect({ label, value, onChange, children, disabled = false }) {
   return (
     <div className="flex flex-col gap-1">
       <span style={{ color: 'var(--text-secondary)' }} className="text-xs">{label}</span>
       <select
         value={value}
         onChange={onChange}
+        disabled={disabled}
         style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-        className="w-full text-sm px-3 py-2 rounded border focus:outline-none cursor-pointer"
+        className={`w-full text-sm px-3 py-2 rounded border focus:outline-none ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       >
         {children}
       </select>
@@ -191,6 +192,7 @@ export default function Toolbar({
   onPaperChange, onOrientationChange,
   onSwitchToCustom,
   disabled = false,
+  multiPage = false,
   onEnterPresetMode,
 }) {
   const usable = getUsable(paper, orientation)
@@ -359,39 +361,45 @@ export default function Toolbar({
               {[...presets]
                 .filter((p) => !filterPaper || !p.paper || p.paper === filterPaper)
                 .sort((a, b) => a.name.localeCompare(b.name))
-                .map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => onSelectPreset(p.id)}
-                  style={{
-                    width: TILE_SIZE, height: TILE_SIZE,
-                    background:  activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                    borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
-                    color: 'var(--text-primary)',
-                  }}
-                  className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 relative group hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
-                >
-                  <span className="text-[11px] font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
-                  <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight">
-                    {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
-                  </span>
-                  {(p.paper || p.orientation) && (
-                    <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight text-center px-1">
-                      {[
-                        p.paper       ? PAPER_SIZES[p.paper]?.label : null,
-                        p.orientation ? p.orientation[0].toUpperCase() + p.orientation.slice(1) : null,
-                      ].filter(Boolean).join(' · ')}
-                    </span>
-                  )}
-                  <PresetMenu
-                    preset={p}
-                    onPublish={IS_LOCAL ? handlePublish : null}
-                    onUnpublish={IS_LOCAL && SAMPLE_PRESETS.some((s) => s.id === p.id) ? handleUnpublish : null}
-                    onEdit={onEditPreset}
-                    onDelete={onDeletePreset}
-                  />
-                </div>
-              ))}
+                .map((p) => {
+                  const mismatch = multiPage && p.paper && p.paper !== paper
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => {
+                        if (!mismatch) onSelectPreset(p.id)
+                      }}
+                      style={{
+                        width: TILE_SIZE, height: TILE_SIZE,
+                        background:  activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                        borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
+                        color: 'var(--text-primary)',
+                      }}
+                      className={`rounded border transition flex flex-col items-center justify-center gap-0.5 relative group ${mismatch ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-indigo-400 hover:bg-[var(--bg-elevated)]'}`}
+                      title={mismatch ? 'Only presets matching the current paper size are selectable when multiple pages are active.' : undefined}
+                    >
+                      <span className="text-[11px] font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
+                      <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight">
+                        {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
+                      </span>
+                      {(p.paper || p.orientation) && (
+                        <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight text-center px-1">
+                          {[
+                            p.paper       ? PAPER_SIZES[p.paper]?.label : null,
+                            p.orientation ? p.orientation[0].toUpperCase() + p.orientation.slice(1) : null,
+                          ].filter(Boolean).join(' · ')}
+                        </span>
+                      )}
+                      <PresetMenu
+                        preset={p}
+                        onPublish={IS_LOCAL ? handlePublish : null}
+                        onUnpublish={IS_LOCAL && SAMPLE_PRESETS.some((s) => s.id === p.id) ? handleUnpublish : null}
+                        onEdit={onEditPreset}
+                        onDelete={onDeletePreset}
+                      />
+                    </div>
+                  )
+                })}
             </div>
           </div>
         )}
@@ -401,7 +409,7 @@ export default function Toolbar({
           <div className="flex flex-col gap-4">
 
             <div className="grid gap-3">
-              <LabeledSelect label="Paper size" value={paper} onChange={(e) => onPaperChange?.(e.target.value)}>
+              <LabeledSelect label="Paper size" value={paper} onChange={(e) => onPaperChange?.(e.target.value)} disabled={multiPage}>
                 {Object.entries(PAPER_SIZES).map(([key, { label }]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}

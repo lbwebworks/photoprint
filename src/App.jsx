@@ -121,15 +121,19 @@ export default function App() {
     if (id) {
       setLastPresetId(id)
     }
-    if (!id) { 
+    if (!id) {
       setPaper("A4")
       setOrientation("portrait")
-      updateActivePage({ activePresetId: null }); 
-      
-      return 
+      updateActivePage({ activePresetId: null })
+      return
     }
     const preset = presets.find((p) => p.id === id)
     if (!preset) return
+
+    // Prevent selecting presets with a different paper size once multiple pages exist.
+    if (multiPage && preset.paper && preset.paper !== paper) {
+      return
+    }
 
     // Apply preset's paper/orientation if set (no prompt — user can rotate freely)
     if (!multiPage) {
@@ -327,6 +331,7 @@ export default function App() {
           onOrientationChange={setOrientation}
           onSwitchToCustom={handleSwitchToCustom}
           disabled={buildingPreset}
+          multiPage={multiPage}
           onEnterPresetMode={handleEnterPresetMode}
         />
 
