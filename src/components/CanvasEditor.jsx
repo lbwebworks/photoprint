@@ -34,11 +34,13 @@ const CanvasEditor = forwardRef(function CanvasEditor(
     onSelectionChange = null,
     onImagesChange = null,       // called with (hasImages: bool) when block image state changes
     imageFitMode = 'fill',
+    theme = 'light',
   },
   ref
 ) {
   const containerRef = useRef(null)
-  const stageRef = useRef(null)
+  const visibleStageRef = useRef(null)
+  const exportStageRef = useRef(null)
   const [containerWidth, setContainerWidth] = useState(0)
 
   // Per-block image overrides: { [blockId]: url | '' }
@@ -220,7 +222,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   }
 
   useImperativeHandle(ref, () => ({
-    stageRef,
+    stageRef: exportStageRef,
 
     getBlockCount() {
       return renderStateRef.current.blocks.length
@@ -301,7 +303,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
       {containerWidth > 0 && (
         <>
           <Stage
-            ref={stageRef}
+            ref={visibleStageRef}
             width={containerWidth}
             height={pageH * stageScale}
             scaleX={stageScale}
@@ -310,7 +312,11 @@ const CanvasEditor = forwardRef(function CanvasEditor(
             onTap={handleStageClick}
           >
             <Layer>
-              <Rect name="paper-bg" x={0} y={0} width={pageW} height={pageH} fill="white" />
+              <Rect
+                name="paper-bg"
+                x={0} y={0} width={pageW} height={pageH}
+                fill={theme === 'dark' ? '#111827' : 'white'}
+              />
               {blocks.map((block, i) => {
                 const url = getEffectiveUrl(block.id, i)
                 return (
@@ -319,6 +325,7 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                     block={block}
                     url={url}
                     blockStyle={blockStyle}
+                    theme={theme}
                     isSelected={selectedIds.has(block.id)}
                     isDragOver={dragOverBlockId === block.id}
                     isEditing={editingBlockId === block.id}
@@ -326,6 +333,35 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                     imageFitMode={imageFitMode}
                     onSelect={handleBlockSelect}
                     onRemoveImage={handleRemoveImage}
+                  />
+                )
+              })}
+            </Layer>
+          </Stage>
+          <Stage
+            ref={exportStageRef}
+            width={pageW}
+            height={pageH}
+            style={{ position: 'absolute', top: -9999, left: -9999, visibility: 'hidden' }}
+          >
+            <Layer>
+              <Rect name="paper-bg" x={0} y={0} width={pageW} height={pageH} fill="white" />
+              {blocks.map((block, i) => {
+                const url = getEffectiveUrl(block.id, i)
+                return (
+                  <Block
+                    key={`export-${block.id}`}
+                    block={block}
+                    url={url}
+                    blockStyle={blockStyle}
+                    theme="light"
+                    isSelected={false}
+                    isDragOver={false}
+                    isEditing={false}
+                    rotation={blockRotations[block.id] ?? 0}
+                    imageFitMode={imageFitMode}
+                    onSelect={null}
+                    onRemoveImage={null}
                   />
                 )
               })}

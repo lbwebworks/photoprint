@@ -514,6 +514,7 @@ export default function App() {
                           presets={presets}
                           activePresetId={page.activePresetId}
                           rotatedSlots={page.rotatedSlots ?? null}
+                          theme={theme}
                           onImagesChange={(has) => {
                             if (page.id === activePageId) setActivePageHasImages(has)
                           }}

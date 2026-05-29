@@ -85,10 +85,10 @@ function BlockImage({ url, blockW, blockH, interactive, rotation = 0, imageFitMo
   )
 }
 
-export default function Block({ block, url, blockStyle, isSelected, isDragOver, isEditing, rotation = 0, imageFitMode = 'fill', onSelect, onRemoveImage }) {
+export default function Block({ block, url, blockStyle, theme = 'light', isSelected, isDragOver, isEditing, rotation = 0, imageFitMode = 'fill', onSelect, onRemoveImage }) {
   const { borderWidth = 0, borderColor = '#000000' } = blockStyle || {}
 
-  const normalStroke  = borderWidth > 0 ? borderColor : '#c0c8d8'
+  const normalStroke  = borderWidth > 0 ? borderColor : (theme === 'dark' ? '#9ca3af' : '#c0c8d8')
   const normalWidth   = borderWidth > 0 ? borderWidth : 2
 
   const ringStroke = isEditing ? '#f59e0b' : isSelected ? '#6366f1' : isDragOver ? '#22d3ee' : null
@@ -113,10 +113,10 @@ export default function Block({ block, url, blockStyle, isSelected, isDragOver, 
       )}
 
       <Group clipX={0} clipY={0} clipWidth={block.w} clipHeight={block.h}>
-        {/* Background — white for empty blocks so they're invisible on export */}
+        {/* Background — empty blocks use visible theme fill on screen, export stays white via theme="light" */}
         <Rect
           width={block.w} height={block.h}
-          fill={url ? '#fefeff' : 'white'}
+          fill={url ? '#fefeff' : (theme === 'dark' ? '#1f2937' : 'white')}
         />
         {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} rotation={rotation} imageFitMode={imageFitMode} />}
         {/* Border — only when block has an image or user set a border width */}
