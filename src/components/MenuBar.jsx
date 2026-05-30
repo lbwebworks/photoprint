@@ -1,4 +1,4 @@
-import { exportPNG, exportPDF, exportAllPNG } from '../utils/exportUtils'
+import { exportPNG, exportPDF, exportAllPNG, printLayout } from '../utils/exportUtils'
 
 export default function MenuBar({ pages, editorRefs, paper, orientation, theme, onTheme, disabled = false }) {
   function getAllEditors() {
@@ -42,6 +42,19 @@ export default function MenuBar({ pages, editorRefs, paper, orientation, theme, 
     }, 50)
   }
 
+  function handlePrint() {
+    if (disabled) return
+    deselectAllPages()
+    setTimeout(() => {
+      const refs = getAllStageRefs()
+      const pageConfigs = pages.map((page) => ({
+        paper: page.paper ?? paper,
+        orientation: page.orientation ?? orientation,
+      }))
+      printLayout(refs, pageConfigs, paper, orientation)
+    }, 50)
+  }
+
   return (
     <div style={{ background: 'var(--bg-menubar)', borderColor: 'var(--border)' }}
       className="w-full border-b px-6 py-3 flex items-center justify-between shrink-0">
@@ -58,6 +71,14 @@ export default function MenuBar({ pages, editorRefs, paper, orientation, theme, 
           className={`border text-sm px-3 py-1.5 rounded transition ${disabled ? 'cursor-not-allowed' : 'hover:opacity-80'}`}
         >
           {theme === 'dark' ? '☀ Light' : '☾ Dark'}
+        </button>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={handlePrint}
+          className={`bg-sky-600 text-white text-sm font-medium px-4 py-1.5 rounded transition ${disabled ? 'cursor-not-allowed' : 'hover:bg-sky-500'}`}
+        >
+          Print
         </button>
         <button
           type="button"

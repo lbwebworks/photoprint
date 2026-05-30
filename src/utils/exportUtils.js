@@ -15,6 +15,62 @@ function stageToDataURL(stageRef) {
   return stage.toDataURL({ pixelRatio, mimeType: 'image/png' })
 }
 
+/** Print the active layout or multi-page layout directly from the browser */
+export function printLayout(stageRefs, pageConfigs = [], defaultPaper = 'A4', defaultOrientation = 'portrait') {
+  if (!stageRefs.length) return
+
+  const pages = stageRefs.map((stageRef, i) => {
+    const config = pageConfigs[i] || {}
+    const paperKey = config.paper || defaultPaper
+    const orientation = config.orientation || defaultOrientation
+    const { width: pageW, height: pageH } = getPaperDims(paperKey, orientation)
+    const mmW = Number(pxToMm(pageW))
+    const mmH = Number(pxToMm(pageH))
+    const pixelRatio = pageW / stageRef.current.width()
+    const dataURL = stageRef.current.toDataURL({ pixelRatio, mimeType: 'image/png' })
+
+    return { dataURL, mmW, mmH }
+  })
+
+  const firstPage = pages[0]
+  const content = pages.map((page) => `
+      <div class="page" style="width:${page.mmW}mm; height:${page.mmH}mm;">
+        <img src="${page.dataURL}" alt="Print preview" />
+      </div>
+    `).join('')
+
+  const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Print layout</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { display: flex; flex-direction: column; align-items: center; }
+  .page { page-break-after: always; break-after: page; overflow: hidden; }
+  .page img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  @page { size: ${firstPage.mmW}mm ${firstPage.mmH}mm; margin: 0; }
+</style>
+</head>
+<body>
+  ${content}
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.focus();
+        window.print();
+      }, 50);
+    }
+  </script>
+</body>
+</html>`
+
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+  printWindow.document.write(html)
+  printWindow.document.close()
+}
+
 /** Export the active (single) page as PNG */
 export function exportPNG(stageRef) {
   const dataURL = stageToDataURL(stageRef)
