@@ -618,7 +618,6 @@ export default function App() {
           )}
         </main>
 
-        ```jsx
         {showSavePresetDialog && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center"
@@ -693,7 +692,7 @@ export default function App() {
             </div>
           </div>
         )}
-        ```
+
         <ImagePanel
           images={images}
           onRemove={handleRemoveImage}
