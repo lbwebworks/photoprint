@@ -103,15 +103,8 @@ const CanvasEditor = forwardRef(function CanvasEditor(
       : computeBlocks(Math.round(Math.sqrt(grid.slots)), paper, orientation, blockStyle.gap)
   }
 
-  let autoUrls
-  if (fillMode === 'autofill-all') {
-    autoUrls = resolveBlockImages(blocks, images, imageOffset)
-  } else if (fillMode === 'autofill') {
-    autoUrls = resolveBlockImagesFill(blocks, images, imageOffset)
-  } else {
-    autoUrls = blocks.map(() => null)
-  }
-
+  // autoUrls are only computed on-demand via the `applyFill` imperative method.
+  const autoUrls = blocks.map(() => null)
   renderStateRef.current = { blocks, autoUrls, blockImages }
 
   // Notify parent when block image state changes (for Clear Page enabled state)
@@ -252,6 +245,26 @@ const CanvasEditor = forwardRef(function CanvasEditor(
     // Restores blockImages from a pre-computed map (called after orientation toggle)
     restoreBlockImages(newMap) {
       setBlockImages(newMap)
+      setSelectedIds(new Set())
+    },
+
+    // Apply a one-time autofill for this editor. Only fills blocks that
+    // don't already have an explicit override.
+    applyFill(mode = 'autofill-all') {
+      let au = []
+      if (mode === 'autofill-all') au = resolveBlockImages(blocks, images, imageOffset)
+      else if (mode === 'autofill') au = resolveBlockImagesFill(blocks, images, imageOffset)
+      else au = blocks.map(() => null)
+
+      setBlockImages((prevMap) => {
+        const next = { ...prevMap }
+        blocks.forEach((b, i) => {
+          const existing = prevMap[b.id]
+          const url = au[i]
+          if (existing === undefined && url) next[b.id] = url
+        })
+        return next
+      })
       setSelectedIds(new Set())
     },
 

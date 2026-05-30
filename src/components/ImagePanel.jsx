@@ -7,6 +7,11 @@ const MIN_PANEL = 180
 const DEFAULT_PANEL = 328  // 3 × 100 + 2×6 gaps + 2×8 padding
 
 export default function ImagePanel({ images, onRemove, onFiles, fillMode = 'none', onFillModeChange, imageFitMode = 'fill', onImageFitModeChange, disabled = false }) {
+  const [selectedFillMode, setSelectedFillMode] = useState(fillMode)
+
+  useEffect(() => {
+    setSelectedFillMode(fillMode)
+  }, [fillMode])
   const [thumbSize, setThumbSize] = useState(DEFAULT_THUMB)
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL)
   const isDragging = useRef(false)
@@ -71,16 +76,27 @@ export default function ImagePanel({ images, onRemove, onFiles, fillMode = 'none
       <div style={{ borderColor: 'var(--border)' }} className="px-3 py-3 border-b flex flex-col gap-3 shrink-0">
         <div className="flex flex-col gap-2">
           <span style={{ color: 'var(--text-secondary)' }} className="text-xs">Fill Mode</span>
-          <select
-            value={fillMode}
-            onChange={(e) => onFillModeChange?.(e.target.value)}
-            style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-            className="w-full text-sm px-2 py-1.5 rounded border focus:outline-none cursor-pointer"
-          >
-            <option value="none">None</option>
-            <option value="autofill">Auto Fill</option>
-            <option value="autofill-all">Auto Fill All</option>
-          </select>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <select
+              value={selectedFillMode}
+              onChange={(e) => { setSelectedFillMode(e.target.value) }}
+              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)', flex: 1 }}
+              className="w-full text-sm px-2 py-1.5 rounded border focus:outline-none cursor-pointer"
+            >
+              <option value="none">None</option>
+              <option value="autofill">Auto Fill</option>
+              <option value="autofill-all">Auto Fill All</option>
+            </select>
+            <button
+              type="button"
+              disabled={disabled || selectedFillMode === fillMode}
+              onClick={() => onFillModeChange?.(selectedFillMode)}
+              className="text-sm px-3 py-1.5 rounded border transition"
+              style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)', whiteSpace: 'nowrap' }}
+            >
+              Apply
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">

@@ -53,6 +53,7 @@ export default function App() {
   const [buildingPreset, setBuildingPreset] = useState(false)
   const [editingPreset, setEditingPreset]   = useState(null)
   const [fillMode, setFillMode]             = useState('none')
+  const [fillModeAppliedAt, setFillModeAppliedAt] = useState(null)
   const [imageFitMode, setImageFitMode]     = useState('fill')
   const [activePageHasImages, setActivePageHasImages] = useState(false)
   const [lastPresetId, setLastPresetId] = useState(null)
@@ -99,6 +100,8 @@ export default function App() {
   useEffect(() => {
     try { localStorage.setItem('lk_presets', JSON.stringify(presets)) } catch {}
   }, [presets])
+
+  
 
   const activePage = pages.find((p) => p.id === activePageId) ?? pages[0]
   const multiPage  = pages.length > 1
@@ -279,6 +282,17 @@ export default function App() {
     setActivePageHasImages(false)
   }
 
+  function handleApplyFill(mode) {
+    // Apply autofill to all existing pages once.
+    pages.forEach((page) => {
+      const ed = editorRefs.current[page.id]?.current
+      ed?.applyFill?.(mode)
+    })
+    // Do not keep autofill mode active for future pages; treat Apply as one-shot.
+    setFillMode('none')
+    setFillModeAppliedAt(Date.now())
+  }
+
   function handleRemovePage(id) {
     setPages((prev) => {
       if (prev.length === 1) return prev
@@ -390,6 +404,7 @@ export default function App() {
                     onClick={() => {
                       pages.forEach((p) => editorRefs.current[p.id]?.current?.clearAll())
                       setFillMode('none')
+                      setFillModeAppliedAt(Date.now())
                       setActivePageHasImages(false)
                     }}
                     style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
@@ -527,7 +542,7 @@ export default function App() {
           onRemove={handleRemoveImage}
           onFiles={handleFiles}
           fillMode={fillMode}
-          onFillModeChange={setFillMode}
+          onFillModeChange={handleApplyFill}
           imageFitMode={imageFitMode}
           onImageFitModeChange={setImageFitMode}
           disabled={buildingPreset}
