@@ -12,7 +12,7 @@
  *   Long  = 216 × 356 mm  = 2551 × 4205 px  (US Legal  8.5 × 14 in)
  *   Short = 216 × 279 mm  = 2551 × 3295 px  (US Letter 8.5 × 11 in)
  *
- * MARGIN = 5mm ≈ 59px — applied on all sides for all paper sizes.
+ * MARGIN = 3mm ≈ 35px — applied on all sides for all paper sizes.
  *
  * Terminology: individual photo areas are called "blocks".
  */
@@ -24,8 +24,8 @@ export const pxToCm = (px) => (px * 2.54 / 300).toFixed(2)
 export const inchToPx = (inch) => Math.round(inch * 300)
 export const pxToInch = (px) => (px / 300).toFixed(3)
 
-// 5mm margin at 300 DPI
-export const MARGIN = mmToPx(5)
+// 3mm margin at 300 DPI
+export const MARGIN = mmToPx(3)
 
 export const PAPER_SIZES = {
   A3:    { label: 'A3',    width: mmToPx(297), height: mmToPx(420) },

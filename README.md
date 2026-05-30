@@ -7,7 +7,7 @@ A client-side photo print layout tool built with React and Konva.js. Arrange pho
 - **Paper sizes** — A4 and A5, portrait or landscape
 - **Grid layout** — 1 to 144 slots (1×1 up to 12×12), fills the page exactly
 - **Free Size layout** — set custom slot dimensions in mm, slots pack and center automatically
-- **5mm paper margin** — maintained on all sides for both paper sizes
+- **3mm paper margin** — maintained on all sides for both paper sizes
 - **Image upload** — multi-file, loaded via `URL.createObjectURL` (no server)
 - **Auto-fill** — 1 image fills all slots; multiple images assign sequentially, last repeats
 - **Slot interaction** — drag to reposition crop, scroll to zoom (fill scale enforced, no empty space)
