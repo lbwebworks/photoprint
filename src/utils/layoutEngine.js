@@ -5,10 +5,8 @@
  * 1mm = 300/25.4 ≈ 11.81 px
  *
  * Paper sizes at 300 DPI:
- *   A3    = 297 × 420 mm  = 3508 × 4961 px
  *   A4    = 210 × 297 mm  = 2480 × 3508 px
  *   A5    = 148 × 210 mm  = 1748 × 2480 px
- *   A6    = 105 × 148 mm  = 1240 × 1748 px
  *   Long  = 216 × 356 mm  = 2551 × 4205 px  (US Legal  8.5 × 14 in)
  *   Short = 216 × 279 mm  = 2551 × 3295 px  (US Letter 8.5 × 11 in)
  *
@@ -28,10 +26,8 @@ export const pxToInch = (px) => (px / 300).toFixed(3)
 export const MARGIN = mmToPx(3)
 
 export const PAPER_SIZES = {
-  A3:    { label: 'A3',    width: mmToPx(297), height: mmToPx(420) },
   A4:    { label: 'A4',    width: mmToPx(210), height: mmToPx(297) },
   A5:    { label: 'A5',    width: mmToPx(148), height: mmToPx(210) },
-  A6:    { label: 'A6',    width: mmToPx(105), height: mmToPx(148) },
   '5R':  { label: '5R',   width: inchToPx(5),   height: inchToPx(7) },
   '4R':  { label: '4R',   width: inchToPx(4),   height: inchToPx(6) },
   '3R':  { label: '3R',   width: inchToPx(3.5), height: inchToPx(5) },
