@@ -50,6 +50,10 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   // Per-block rotation: { [blockId]: 0 | 90 | 180 | 270 }
   const [blockRotations, setBlockRotations] = useState({})
 
+  // Per-block zoom and pan: { [blockId]: zoom } and { [blockId]: { x, y } }
+  const [blockZooms, setBlockZooms] = useState({})
+  const [blockOffsets, setBlockOffsets] = useState({})
+
   // Multi-selection: Set of block ids
   const [selectedIds, setSelectedIds] = useState(new Set())
 
@@ -77,6 +81,8 @@ const CanvasEditor = forwardRef(function CanvasEditor(
   useEffect(() => {
     setBlockImages({})
     setBlockRotations({})
+    setBlockZooms({})
+    setBlockOffsets({})
     setSelectedIds(new Set())
     setEditingBlockId(null)
   }, [template, grid, blockSize, paper, activePresetId])
@@ -343,7 +349,11 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                     isDragOver={dragOverBlockId === block.id}
                     isEditing={editingBlockId === block.id}
                     rotation={blockRotations[block.id] ?? 0}
+                    blockZoom={blockZooms[block.id] ?? 1}
+                    blockOffset={blockOffsets[block.id] ?? { x: 0, y: 0 }}
                     imageFitMode={imageFitMode}
+                    onBlockZoomChange={(z) => setBlockZooms((prev) => ({ ...prev, [block.id]: z }))}
+                    onBlockOffsetChange={(o) => setBlockOffsets((prev) => ({ ...prev, [block.id]: o }))}
                     onSelect={handleBlockSelect}
                     onRemoveImage={handleRemoveImage}
                   />
@@ -372,7 +382,11 @@ const CanvasEditor = forwardRef(function CanvasEditor(
                     isDragOver={false}
                     isEditing={false}
                     rotation={blockRotations[block.id] ?? 0}
+                    blockZoom={blockZooms[block.id] ?? 1}
+                    blockOffset={blockOffsets[block.id] ?? { x: 0, y: 0 }}
                     imageFitMode={imageFitMode}
+                    onBlockZoomChange={() => {}}
+                    onBlockOffsetChange={() => {}}
                     onSelect={null}
                     onRemoveImage={null}
                   />

@@ -2,11 +2,33 @@ import { useState, useEffect } from 'react'
 import { Group, Rect, Image as KonvaImage } from 'react-konva'
 import { getFillScale, getFitScale, clampOffset } from '../utils/imageUtils'
 
-function BlockImage({ url, blockW, blockH, interactive, rotation = 0, imageFitMode = 'fill' }) {
+function BlockImage({ url, blockW, blockH, interactive, rotation = 0, zoom = 1, offset = { x: 0, y: 0 }, onZoomChange, onOffsetChange, imageFitMode = 'fill' }) {
   const [img, setImg] = useState(null)
   const [rotatedImg, setRotatedImg] = useState(null)
-  const [zoom, setZoom] = useState(1)
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  // Local state for uncontrolled mode (when props not provided)
+  const [localZoom, setLocalZoom] = useState(1)
+  const [localOffset, setLocalOffset] = useState({ x: 0, y: 0 })
+
+  // Determine if controlled or uncontrolled
+  const isControlled = onZoomChange !== undefined && onOffsetChange !== undefined
+  const effectiveZoom = isControlled ? zoom : localZoom
+  const effectiveOffset = isControlled ? offset : localOffset
+
+  const updateZoom = (z) => {
+    if (isControlled && onZoomChange) {
+      onZoomChange(z)
+    } else {
+      setLocalZoom(z)
+    }
+  }
+
+  const updateOffset = (o) => {
+    if (isControlled && onOffsetChange) {
+      onOffsetChange(o)
+    } else {
+      setLocalOffset(o)
+    }
+  }
 
   // Load the source image
   useEffect(() => {
@@ -35,14 +57,14 @@ function BlockImage({ url, blockW, blockH, interactive, rotation = 0, imageFitMo
     out.src = canvas.toDataURL()
     out.onload = () => {
       setRotatedImg(out)
-      setZoom(1)
-      setOffset({ x: 0, y: 0 })
+      updateZoom(1)
+      updateOffset({ x: 0, y: 0 })
     }
   }, [img, rotation])
 
   useEffect(() => {
     if (!rotatedImg) return
-    setOffset({ x: 0, y: 0 })
+    updateOffset({ x: 0, y: 0 })
   }, [imageFitMode, rotatedImg])
 
   if (!rotatedImg) return null
@@ -50,19 +72,19 @@ function BlockImage({ url, blockW, blockH, interactive, rotation = 0, imageFitMo
   const baseScale = imageFitMode === 'fit'
     ? getFitScale(rotatedImg.width, rotatedImg.height, blockW, blockH)
     : getFillScale(rotatedImg.width, rotatedImg.height, blockW, blockH)
-  const effectiveScale = baseScale * zoom
+  const effectiveScale = baseScale * effectiveZoom
   const drawW = rotatedImg.width  * effectiveScale
   const drawH = rotatedImg.height * effectiveScale
 
   const baseX = (blockW - drawW) / 2
   const baseY = (blockH - drawH) / 2
-  const pos = clampOffset(baseX + offset.x, baseY + offset.y, drawW, drawH, blockW, blockH)
+  const pos = clampOffset(baseX + effectiveOffset.x, baseY + effectiveOffset.y, drawW, drawH, blockW, blockH)
 
   function handleWheel(e) {
     if (!interactive) return
     e.evt.preventDefault()
     const factor = e.evt.deltaY < 0 ? 1.05 : 0.95
-    setZoom((z) => Math.max(1, z * factor))
+    updateZoom(Math.max(1, effectiveZoom * factor))
   }
 
   function handleDragMove(e) {
@@ -70,7 +92,7 @@ function BlockImage({ url, blockW, blockH, interactive, rotation = 0, imageFitMo
     const raw = e.target.position()
     const clamped = clampOffset(raw.x, raw.y, drawW, drawH, blockW, blockH)
     e.target.position(clamped)
-    setOffset({ x: clamped.x - baseX, y: clamped.y - baseY })
+    updateOffset({ x: clamped.x - baseX, y: clamped.y - baseY })
   }
 
   return (
@@ -85,7 +107,7 @@ function BlockImage({ url, blockW, blockH, interactive, rotation = 0, imageFitMo
   )
 }
 
-export default function Block({ block, url, blockStyle, theme = 'light', isSelected, isDragOver, isEditing, rotation = 0, imageFitMode = 'fill', onSelect, onRemoveImage }) {
+export default function Block({ block, url, blockStyle, theme = 'light', isSelected, isDragOver, isEditing, rotation = 0, blockZoom = 1, blockOffset = { x: 0, y: 0 }, imageFitMode = 'fill', onBlockZoomChange, onBlockOffsetChange, onSelect, onRemoveImage }) {
   const { borderWidth = 0, borderColor = '#000000' } = blockStyle || {}
 
   const normalStroke  = borderWidth > 0 ? borderColor : (theme === 'dark' ? '#9ca3af' : '#c0c8d8')
@@ -118,7 +140,7 @@ export default function Block({ block, url, blockStyle, theme = 'light', isSelec
           width={block.w} height={block.h}
           fill={url ? '#fefeff' : (theme === 'dark' ? '#1f2937' : 'white')}
         />
-        {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} rotation={rotation} imageFitMode={imageFitMode} />}
+        {url && <BlockImage url={url} blockW={block.w} blockH={block.h} interactive={isEditing} rotation={rotation} zoom={blockZoom} offset={blockOffset} onZoomChange={onBlockZoomChange} onOffsetChange={onBlockOffsetChange} imageFitMode={imageFitMode} />}
         {/* Border — only when block has an image or user set a border width */}
         {(url || borderWidth > 0) && (
           <Rect
