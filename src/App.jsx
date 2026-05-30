@@ -306,6 +306,12 @@ export default function App() {
     })
   }
 
+  function handleClearPage(id) {
+    const ed = editorRefs.current[id]?.current
+    ed?.clearAll?.()
+    if (id === activePageId) setActivePageHasImages(false)
+  }
+
   function handleDeleteExtraPages() {
     setPages((prev) => {
       if (prev.length <= 1) return prev
