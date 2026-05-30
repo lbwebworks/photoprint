@@ -192,6 +192,7 @@ export default function Toolbar({
   onSelectPreset, onCreatePreset, onEditPreset, onDeletePreset,
   onPaperChange, onOrientationChange,
   onSwitchToCustom,
+  onSaveAsPreset,
   disabled = false,
   multiPage = false,
   onEnterPresetMode,
@@ -557,6 +558,18 @@ export default function Toolbar({
                 />
               </>
             )}
+
+            {/* Sticky footer: Save As Preset (visible only in Custom mode) */}
+            <div style={{ position: 'sticky', bottom: 0, padding: '12px', background: 'linear-gradient(to top, rgba(255,255,255,0.98), rgba(255,255,255,0))' }}>
+              <button
+                onClick={() => onSaveAsPreset?.()}
+                disabled={disabled}
+                className="w-full text-sm px-3 py-2 rounded border transition"
+                style={{ background: '#6366f1', color: 'white', borderColor: '#6366f1' }}
+              >
+                Save As Preset
+              </button>
+            </div>
 
           </div>
         )}

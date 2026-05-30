@@ -73,6 +73,9 @@ export default function App() {
   const getEditor = (pageId) => editorRefs.current[pageId]?.current
   const [theme, setTheme]     = usePersistedState('lk_theme', 'light')
   const [presets, setPresets] = useState(() => loadPresets())
+  const [showSavePresetDialog, setShowSavePresetDialog] = useState(false)
+  const [pendingPreset, setPendingPreset] = useState(null)
+  const [savePresetName, setSavePresetName] = useState('')
 
   // Merge shipped presets with any local extras stored in localStorage.
   useEffect(() => {
@@ -162,6 +165,76 @@ export default function App() {
   function handleCreatePreset() {
     setEditingPreset(null)
     setBuildingPreset(true)
+  }
+
+  // Open the preset builder pre-filled from the current custom-mode page settings
+  function handleSaveAsPresetFromActivePage() {
+    const page = activePage
+    if (!page) return
+    // Try to capture current blocks from the editor (absolute px positions)
+    const editor = getEditor(activePageId)
+    let slots = null
+    try {
+      const snap = editor?.getRotateSnapshot?.()
+      if (snap && Array.isArray(snap.blocks) && snap.blocks.length > 0) {
+        slots = snap.blocks
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    if (!slots) {
+      // Fallback: warn user and open builder as before
+      const preset = {
+        id: null,
+        name: '',
+        paper: page.paper ?? paper,
+        orientation: page.orientation ?? orientation,
+        borderWidth: page.blockStyle?.borderWidth ?? 0,
+        borderColor: page.blockStyle?.borderColor ?? '#000000',
+        gap: page.blockStyle?.gap ?? 0,
+        cols: page.grid && page.grid.mode !== 'custom' ? page.grid.cols : null,
+        rows: page.grid && page.grid.mode !== 'custom' ? page.grid.rows : null,
+        slots: null,
+      }
+      setEditingPreset(preset)
+      setBuildingPreset(true)
+      return
+    }
+
+    // Prepare pending preset with captured slots and show modal for name
+    const pending = {
+      id: null,
+      name: '',
+      paper: page.paper ?? paper,
+      orientation: page.orientation ?? orientation,
+      borderWidth: page.blockStyle?.borderWidth ?? 0,
+      borderColor: page.blockStyle?.borderColor ?? '#000000',
+      gap: page.blockStyle?.gap ?? 0,
+      cols: null,
+      rows: null,
+      slots,
+    }
+    setPendingPreset(pending)
+    setSavePresetName('')
+    setShowSavePresetDialog(true)
+  }
+
+  function handleConfirmSavePreset() {
+    if (!pendingPreset) return
+    const name = (savePresetName || '').trim()
+    if (!name) { alert('Please enter a preset name.'); return }
+    const toSave = { ...pendingPreset, name }
+    handleSavePreset(toSave)
+    setPendingPreset(null)
+    setSavePresetName('')
+    setShowSavePresetDialog(false)
+  }
+
+  function handleCancelSavePreset() {
+    setPendingPreset(null)
+    setSavePresetName('')
+    setShowSavePresetDialog(false)
   }
 
   function handleSavePreset(preset) {
@@ -371,6 +444,7 @@ export default function App() {
           activePresetId={activePage?.activePresetId ?? null}
           onSelectPreset={handleSelectPreset}
           onCreatePreset={handleCreatePreset}
+          onSaveAsPreset={handleSaveAsPresetFromActivePage}
           onEditPreset={handleEditPreset}
           onDeletePreset={handleDeletePreset}
           onPaperChange={setPaper}
@@ -544,6 +618,82 @@ export default function App() {
           )}
         </main>
 
+        ```jsx
+        {showSavePresetDialog && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.45)' }}
+          >
+            <div
+              className="w-80 rounded-lg border shadow-2xl p-4 flex flex-col gap-4"
+              style={{
+                background: 'var(--bg-surface)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <h2
+                className="text-sm font-semibold"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Save Preset
+              </h2>
+
+              <div className="flex flex-col gap-1">
+                <label
+                  className="text-xs"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Preset Name
+                </label>
+
+                <input
+                  autoFocus
+                  type="text"
+                  value={savePresetName}
+                  onChange={(e) => setSavePresetName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleConfirmSavePreset()
+                    if (e.key === 'Escape') handleCancelSavePreset()
+                  }}
+                  placeholder="Enter preset name..."
+                  className="text-sm px-3 py-2 rounded border focus:outline-none"
+                  style={{
+                    background: 'var(--bg-base)',
+                    color: 'var(--text-primary)',
+                    borderColor: 'var(--border)',
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={handleCancelSavePreset}
+                  className="text-sm px-3 py-1.5 rounded border transition hover:opacity-80"
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    color: 'var(--text-secondary)',
+                    borderColor: 'var(--border)',
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleConfirmSavePreset}
+                  className="text-sm px-3 py-1.5 rounded border transition hover:opacity-80"
+                  style={{
+                    background: '#6366f1',
+                    color: 'white',
+                    borderColor: '#6366f1',
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        ```
         <ImagePanel
           images={images}
           onRemove={handleRemoveImage}
