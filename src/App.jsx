@@ -463,10 +463,11 @@ export default function App() {
                             ↻
                           </button>
                           <button
+                            disabled={!(editorRefs.current[page.id]?.current?.hasImages?.() ?? false)}
                             onClick={() => getEditor(page.id)?.shuffle()}
                             title="Shuffle images"
                             style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)', fontFamily: 'system-ui, sans-serif' }}
-                            className="text-sm w-6 h-6 rounded border transition hover:opacity-80"
+                            className="text-sm w-6 h-6 rounded border transition hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             ⇄
                           </button>
