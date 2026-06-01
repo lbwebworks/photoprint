@@ -1,6 +1,6 @@
 [
   {
-    "name": "Id Package 6",
+    "name": "Id Package 12",
     "paper": "A5",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -143,10 +143,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1778312280830"
+    "id": "preset-1778312280830",
+    "code": "Id Package 12",
+    "category": "Uncategorized"
   },
   {
-    "name": "Id Package 7",
+    "name": "Id Package 14",
     "paper": "A5",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -268,10 +270,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1778312439392"
+    "id": "preset-1778312439392",
+    "code": "Id Package 14",
+    "category": "Uncategorized"
   },
   {
-    "name": "Combo 06",
+    "name": "2R Saver Pack",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -344,10 +348,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1778315188542"
+    "id": "preset-1778315188542",
+    "code": "Combo 06",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Combo 05",
+    "name": "3R Grid Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -385,10 +391,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1778315660216"
+    "id": "preset-1778315660216",
+    "code": "Combo 05",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Crazy Combo 1",
+    "name": "Ultimate ID & Photo Pack",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -475,10 +483,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1778323973434"
+    "id": "preset-1778323973434",
+    "code": "Crazy Combo 1",
+    "category": "Creative Bundles"
   },
   {
-    "name": "Id Package 1",
+    "name": "Id Package 05",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -544,79 +554,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1779854691630"
+    "id": "preset-1779854691630",
+    "code": "Id Package 05",
+    "category": "Uncategorized"
   },
   {
-    "name": "Id Package 2",
-    "paper": "4R",
-    "orientation": "landscape",
-    "borderWidth": 0,
-    "borderColor": "#000000",
-    "gap": 0,
-    "slots": [
-      {
-        "id": "block-1779854753869",
-        "x": 74,
-        "y": 59,
-        "w": 413,
-        "h": 531
-      },
-      {
-        "id": "block-1779854786485",
-        "x": 74,
-        "y": 590,
-        "w": 413,
-        "h": 531
-      },
-      {
-        "id": "block-1779854795070",
-        "x": 487,
-        "y": 59,
-        "w": 413,
-        "h": 531
-      },
-      {
-        "id": "block-1779854800950",
-        "x": 900,
-        "y": 59,
-        "w": 413,
-        "h": 531
-      },
-      {
-        "id": "block-1779854804971",
-        "x": 1314.072413918887,
-        "y": 59,
-        "w": 413,
-        "h": 531
-      },
-      {
-        "id": "block-1779854810645",
-        "x": 487,
-        "y": 590,
-        "w": 413,
-        "h": 531
-      },
-      {
-        "id": "block-1779854815828",
-        "x": 900,
-        "y": 590,
-        "w": 413,
-        "h": 531
-      },
-      {
-        "id": "block-1779854821494",
-        "x": 1314.072413918887,
-        "y": 590,
-        "w": 413,
-        "h": 531
-      }
-    ],
-    "cols": null,
-    "rows": null,
-    "id": "preset-1779854890932"
-  },
-  {
-    "name": "Id Package 3",
+    "name": "Id Package 06",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -717,10 +660,83 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1779855262792"
+    "id": "preset-1779855262792",
+    "code": "Id Package 06",
+    "category": "Uncategorized"
   },
   {
-    "name": "Id Package 4",
+    "name": "Id Package 08",
+    "paper": "4R",
+    "orientation": "landscape",
+    "borderWidth": 0,
+    "borderColor": "#000000",
+    "gap": 0,
+    "slots": [
+      {
+        "id": "block-1779854753869",
+        "x": 74,
+        "y": 59,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1779854786485",
+        "x": 74,
+        "y": 590,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1779854795070",
+        "x": 487,
+        "y": 59,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1779854800950",
+        "x": 900,
+        "y": 59,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1779854804971",
+        "x": 1314.072413918887,
+        "y": 59,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1779854810645",
+        "x": 487,
+        "y": 590,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1779854815828",
+        "x": 900,
+        "y": 590,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1779854821494",
+        "x": 1314.072413918887,
+        "y": 590,
+        "w": 413,
+        "h": 531
+      }
+    ],
+    "cols": null,
+    "rows": null,
+    "id": "preset-1779854890932",
+    "code": "Id Package 08",
+    "category": "Uncategorized"
+  },
+  {
+    "name": "Id Package 07",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -793,11 +809,13 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1779855481132"
+    "id": "preset-1779855481132",
+    "code": "Id Package 07",
+    "category": "Uncategorized"
   },
   {
     "id": "preset-1780126757234",
-    "name": "Solo 3R",
+    "name": "Single 3R Print",
     "paper": "3R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -813,11 +831,13 @@
         "w": 1430,
         "h": 980
       }
-    ]
+    ],
+    "code": "Solo 3R",
+    "category": "Single Prints"
   },
   {
     "id": "preset-1780126870092",
-    "name": "Solo 4R",
+    "name": "Single 4R Print",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -833,11 +853,13 @@
         "w": 1730,
         "h": 1130
       }
-    ]
+    ],
+    "code": "Solo 4R",
+    "category": "Single Prints"
   },
   {
     "id": "preset-1780126899298",
-    "name": "Solo 5R",
+    "name": "Single 5R Print",
     "paper": "5R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -853,11 +875,13 @@
         "w": 2030,
         "h": 1430
       }
-    ]
+    ],
+    "code": "Solo 5R",
+    "category": "Single Prints"
   },
   {
     "id": "preset-1780127397952",
-    "name": "Solo A4",
+    "name": "Single A4 Print",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -873,11 +897,13 @@
         "w": 3438,
         "h": 2410
       }
-    ]
+    ],
+    "code": "Solo A4",
+    "category": "Single Prints"
   },
   {
     "id": "preset-1780127413213",
-    "name": "Solo A5",
+    "name": "Single A5 Print",
     "paper": "A5",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -893,10 +919,12 @@
         "w": 2410,
         "h": 1678
       }
-    ]
+    ],
+    "code": "Solo A5",
+    "category": "Single Prints"
   },
   {
-    "name": "Id Package 5",
+    "name": "Id Package 09",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1011,7 +1039,9 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780127793184"
+    "id": "preset-1780127793184",
+    "code": "Id Package 09",
+    "category": "Uncategorized"
   },
   {
     "name": "4R Combo (2x2R)",
@@ -1038,7 +1068,9 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780128739231"
+    "id": "preset-1780128739231",
+    "code": "4R Combo (2x2R)",
+    "category": "Uncategorized"
   },
   {
     "name": "5R Combo (2x3R)",
@@ -1065,10 +1097,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780129132940"
+    "id": "preset-1780129132940",
+    "code": "5R Combo (2x3R)",
+    "category": "Uncategorized"
   },
   {
-    "name": "Crazy Combo 2",
+    "name": "Student Essentials Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1190,10 +1224,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780129749367"
+    "id": "preset-1780129749367",
+    "code": "Crazy Combo 2",
+    "category": "Creative Bundles"
   },
   {
-    "name": "Crazy Combo 3",
+    "name": "Passport & Memories Pack",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1322,10 +1358,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780130722331"
+    "id": "preset-1780130722331",
+    "code": "Crazy Combo 3",
+    "category": "Creative Bundles"
   },
   {
-    "name": "Crazy Combo 4",
+    "name": "Family ID Combo Pack",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1440,10 +1478,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780130935655"
+    "id": "preset-1780130935655",
+    "code": "Crazy Combo 4",
+    "category": "Creative Bundles"
   },
   {
-    "name": "Crazy Combo 5",
+    "name": "Complete Print Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1551,10 +1591,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780131189264"
+    "id": "preset-1780131189264",
+    "code": "Crazy Combo 5",
+    "category": "Creative Bundles"
   },
   {
-    "name": "Combo 07",
+    "name": "Family Moments Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1599,10 +1641,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780131914449"
+    "id": "preset-1780131914449",
+    "code": "Combo 07",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Combo 08",
+    "name": "Dual Size Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1640,10 +1684,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780132005577"
+    "id": "preset-1780132005577",
+    "code": "Combo 08",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Combo 09",
+    "name": "Portrait Showcase Pack",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1674,10 +1720,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780132101481"
+    "id": "preset-1780132101481",
+    "code": "Combo 09",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Combo 10",
+    "name": "Celebration Mix Pack",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1715,10 +1763,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780132317671"
+    "id": "preset-1780132317671",
+    "code": "Combo 10",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Combo 11",
+    "name": "Large Memory Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1749,10 +1799,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780132436671"
+    "id": "preset-1780132436671",
+    "code": "Combo 11",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Crazy Combo 6",
+    "name": "Large Portrait Combo",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1811,10 +1863,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780132671599"
+    "id": "preset-1780132671599",
+    "code": "Crazy Combo 6",
+    "category": "Creative Bundles"
   },
   {
-    "name": "Solo 8R",
+    "name": "Single 8R Print",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1831,10 +1885,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780133451197"
+    "id": "preset-1780133451197",
+    "code": "Solo 8R",
+    "category": "Single Prints"
   },
   {
-    "name": "Solo 6R",
+    "name": "Single 6R Print",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1851,10 +1907,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780133589400"
+    "id": "preset-1780133589400",
+    "code": "Solo 6R",
+    "category": "Single Prints"
   },
   {
-    "name": "Combo 01",
+    "name": "Memory Mix Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1899,10 +1957,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780133811863"
+    "id": "preset-1780133811863",
+    "code": "Combo 01",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Combo 02",
+    "name": "Classic Photo Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1933,10 +1993,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780134048809"
+    "id": "preset-1780134048809",
+    "code": "Combo 02",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Combo 03",
+    "name": "Premium Mix Bundle",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1974,10 +2036,12 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780134187787"
+    "id": "preset-1780134187787",
+    "code": "Combo 03",
+    "category": "Standard Photo Bundles"
   },
   {
-    "name": "Combo 04",
+    "name": "Barkada Print Pack",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2036,7 +2100,9 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780134308997"
+    "id": "preset-1780134308997",
+    "code": "Combo 04",
+    "category": "Standard Photo Bundles"
   },
   {
     "name": "A4 Combo 1 (2xA5)",
@@ -2063,7 +2129,9 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780136262142"
+    "id": "preset-1780136262142",
+    "code": "A4 Combo 1 (2xA5)",
+    "category": "Uncategorized"
   },
   {
     "name": "A5 Combo (2xA6)",
@@ -2090,7 +2158,9 @@
     ],
     "cols": null,
     "rows": null,
-    "id": "preset-1780136672678"
+    "id": "preset-1780136672678",
+    "code": "A5 Combo (2xA6)",
+    "category": "Uncategorized"
   },
   {
     "id": "preset-1780136914339",
@@ -2131,7 +2201,9 @@
         "w": 1677,
         "h": 1169
       }
-    ]
+    ],
+    "code": "A4 Combo 2 (4xA6)",
+    "category": "Uncategorized"
   },
   {
     "id": "preset-1780137100759",
@@ -2200,7 +2272,9 @@
         "w": 1169,
         "h": 803
       }
-    ]
+    ],
+    "code": "A4 Combo 3 (8xA7)",
+    "category": "Uncategorized"
   },
   {
     "id": "preset-1780137140756",
@@ -2241,6 +2315,617 @@
         "w": 1169,
         "h": 803
       }
-    ]
+    ],
+    "code": "A5 Combo (4xA7)",
+    "category": "Uncategorized"
+  },
+  {
+    "name": "Id Package 11",
+    "paper": "5R",
+    "orientation": "landscape",
+    "borderWidth": 0,
+    "borderColor": "#000000",
+    "gap": 0,
+    "slots": [
+      {
+        "id": "block-1780309043231",
+        "x": 144.38170583686838,
+        "y": 150,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780309051163",
+        "x": 1344.3817058368684,
+        "y": 150,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780309058851",
+        "x": 744.3817058368684,
+        "y": 150,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780309064493",
+        "x": 744.3817058368684,
+        "y": 750,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780309158166",
+        "x": 144.38170583686838,
+        "y": 750,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780309162231",
+        "x": 1644.3817058368684,
+        "y": 150,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780309166837",
+        "x": 1344.3817058368684,
+        "y": 450,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780309170476",
+        "x": 1644.3817058368684,
+        "y": 450,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780309174639",
+        "x": 1344.3817058368684,
+        "y": 750,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780309178014",
+        "x": 1644.3817058368684,
+        "y": 750,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780309182416",
+        "x": 1344.3817058368684,
+        "y": 1050,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780309186097",
+        "x": 1644.3817058368684,
+        "y": 1050,
+        "w": 300,
+        "h": 300
+      }
+    ],
+    "cols": null,
+    "rows": null,
+    "id": "preset-1780309211120",
+    "code": "Id Package 11",
+    "category": "Uncategorized"
+  },
+  {
+    "name": "Id Package 13",
+    "paper": "A5",
+    "orientation": "landscape",
+    "borderWidth": 0,
+    "borderColor": "#000000",
+    "gap": 0,
+    "slots": [
+      {
+        "id": "block-1780309980312",
+        "x": 1410.5559908515786,
+        "y": 77.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780309983212",
+        "x": 171.5559908515786,
+        "y": 77.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311587332",
+        "x": 171.5559908515786,
+        "y": 608.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311591060",
+        "x": 171.5559908515786,
+        "y": 1139.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311594768",
+        "x": 584.5559908515786,
+        "y": 77.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311616037",
+        "x": 584.5559908515786,
+        "y": 608.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311620960",
+        "x": 584.5559908515786,
+        "y": 1139.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311626007",
+        "x": 997.5559908515786,
+        "y": 77.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311629612",
+        "x": 997.5559908515786,
+        "y": 608.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311634203",
+        "x": 997.5559908515786,
+        "y": 1139.5,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311639285",
+        "x": 1710.5559908515786,
+        "y": 77.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311643169",
+        "x": 2010.5559908515786,
+        "y": 77.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311676324",
+        "x": 1410.5559908515786,
+        "y": 377.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311680646",
+        "x": 1710.5559908515786,
+        "y": 377.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311684041",
+        "x": 2010.5559908515786,
+        "y": 377.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311687872",
+        "x": 1410.5559908515786,
+        "y": 677.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311691121",
+        "x": 1710.5559908515786,
+        "y": 677.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311696629",
+        "x": 2010.5559908515786,
+        "y": 677.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311699670",
+        "x": 1410.5559908515786,
+        "y": 977.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311703304",
+        "x": 1410.5559908515786,
+        "y": 1277.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311710880",
+        "x": 1710.5559908515786,
+        "y": 977.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311715746",
+        "x": 2010.5559908515786,
+        "y": 977.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311718716",
+        "x": 1710.5559908515786,
+        "y": 1277.5,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780311722800",
+        "x": 2010.5559908515786,
+        "y": 1277.5,
+        "w": 300,
+        "h": 300
+      }
+    ],
+    "cols": null,
+    "rows": null,
+    "id": "preset-1780310031829",
+    "code": "Id Package 13",
+    "category": "Uncategorized"
+  },
+  {
+    "name": "Id Package 01",
+    "paper": "3R",
+    "orientation": "landscape",
+    "borderWidth": 0,
+    "borderColor": "#000000",
+    "gap": 0,
+    "slots": [
+      {
+        "id": "block-1780310184707",
+        "x": 157.77538410260763,
+        "y": 79.60749599420899,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310194604",
+        "x": 157.77538410260763,
+        "y": 379.607495994209,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310197643",
+        "x": 1057.7753841026076,
+        "y": 679.607495994209,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310201537",
+        "x": 457.77538410260763,
+        "y": 79.60749599420899,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310204534",
+        "x": 757.7753841026076,
+        "y": 79.60749599420899,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310207493",
+        "x": 1057.7753841026076,
+        "y": 79.60749599420899,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310212033",
+        "x": 1057.7753841026076,
+        "y": 379.607495994209,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310249584",
+        "x": 457.77538410260763,
+        "y": 379.607495994209,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310252502",
+        "x": 757.7753841026076,
+        "y": 379.607495994209,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310257289",
+        "x": 157.77538410260763,
+        "y": 679.607495994209,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310261875",
+        "x": 457.77538410260763,
+        "y": 679.607495994209,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310264812",
+        "x": 757.7753841026076,
+        "y": 679.607495994209,
+        "w": 300,
+        "h": 300
+      }
+    ],
+    "cols": null,
+    "rows": null,
+    "id": "preset-1780310279817",
+    "code": "Id Package 01",
+    "category": "Uncategorized"
+  },
+  {
+    "name": "Id Package 02",
+    "paper": "3R",
+    "orientation": "landscape",
+    "borderWidth": 0,
+    "borderColor": "#000000",
+    "gap": 0,
+    "slots": [
+      {
+        "id": "block-1780310295383",
+        "x": 150,
+        "y": 79.60749599420876,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780310306751",
+        "x": 750,
+        "y": 79.60749599420876,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780310311609",
+        "x": 150,
+        "y": 679.6074959942088,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310320921",
+        "x": 450,
+        "y": 679.6074959942088,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310324761",
+        "x": 750,
+        "y": 679.6074959942088,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780310327831",
+        "x": 1050,
+        "y": 679.6074959942088,
+        "w": 300,
+        "h": 300
+      }
+    ],
+    "cols": null,
+    "rows": null,
+    "id": "preset-1780310359739",
+    "code": "Id Package 02",
+    "category": "Uncategorized"
+  },
+  {
+    "name": "Id Package 10",
+    "paper": "5R",
+    "orientation": "landscape",
+    "borderWidth": 0,
+    "borderColor": "#000000",
+    "gap": 0,
+    "slots": [
+      {
+        "id": "block-1780311825088",
+        "x": 150,
+        "y": 150,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780311833468",
+        "x": 150,
+        "y": 750,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780311836866",
+        "x": 750,
+        "y": 150,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780311839623",
+        "x": 1350,
+        "y": 150,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780311842615",
+        "x": 750,
+        "y": 750,
+        "w": 600,
+        "h": 600
+      },
+      {
+        "id": "block-1780311847066",
+        "x": 1350,
+        "y": 750,
+        "w": 600,
+        "h": 600
+      }
+    ],
+    "cols": null,
+    "rows": null,
+    "id": "preset-1780311899668",
+    "code": "Id Package 10",
+    "category": "Uncategorized"
+  },
+  {
+    "name": "Id Package 04",
+    "paper": "3R",
+    "orientation": "landscape",
+    "borderWidth": 0,
+    "borderColor": "#000000",
+    "gap": 0,
+    "slots": [
+      {
+        "id": "block-1780311975262",
+        "x": 128.5,
+        "y": 117.5238675892864,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311984244",
+        "x": 541.5,
+        "y": 117.5238675892864,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311987190",
+        "x": 954.5,
+        "y": 117.5238675892864,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780311994847",
+        "x": 128.5,
+        "y": 648.5238675892864,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780312001657",
+        "x": 428.5,
+        "y": 648.5238675892864,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780312004576",
+        "x": 728.5,
+        "y": 648.5238675892864,
+        "w": 300,
+        "h": 300
+      },
+      {
+        "id": "block-1780312009000",
+        "x": 1028.5,
+        "y": 648.5238675892864,
+        "w": 300,
+        "h": 300
+      }
+    ],
+    "cols": null,
+    "rows": null,
+    "id": "preset-1780312107863",
+    "code": "Id Package 04",
+    "category": "Uncategorized"
+  },
+  {
+    "name": "Id Package 03",
+    "paper": "3R",
+    "orientation": "landscape",
+    "borderWidth": 0,
+    "borderColor": "#000000",
+    "gap": 0,
+    "slots": [
+      {
+        "id": "block-1780312124049",
+        "x": 130.5,
+        "y": 35,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780312134796",
+        "x": 543.5,
+        "y": 35,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780312137785",
+        "x": 956.5,
+        "y": 35,
+        "w": 413,
+        "h": 531
+      },
+      {
+        "id": "block-1780312145155",
+        "x": 130.5,
+        "y": 566,
+        "w": 531,
+        "h": 413
+      },
+      {
+        "id": "block-1780312157205",
+        "x": 661.5,
+        "y": 566,
+        "w": 531,
+        "h": 413
+      }
+    ],
+    "cols": null,
+    "rows": null,
+    "id": "preset-1780312193105",
+    "code": "Id Package 03",
+    "category": "Uncategorized"
   }
 ]
