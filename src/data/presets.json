@@ -1,6 +1,6 @@
 [
   {
-    "name": "Id Package 12",
+    "name": "Complete ID Bundle",
     "paper": "A5",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -145,10 +145,10 @@
     "rows": null,
     "id": "preset-1778312280830",
     "code": "Id Package 12",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
-    "name": "Id Package 14",
+    "name": "Ultimate ID Set",
     "paper": "A5",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -272,7 +272,7 @@
     "rows": null,
     "id": "preset-1778312439392",
     "code": "Id Package 14",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
     "name": "2R Saver Pack",
@@ -488,7 +488,7 @@
     "category": "Creative Bundles"
   },
   {
-    "name": "Id Package 05",
+    "name": "Mixed ID Essentials",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -556,10 +556,10 @@
     "rows": null,
     "id": "preset-1779854691630",
     "code": "Id Package 05",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
-    "name": "Id Package 06",
+    "name": "Passport & 1x1 Bundle",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -662,10 +662,10 @@
     "rows": null,
     "id": "preset-1779855262792",
     "code": "Id Package 06",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
-    "name": "Id Package 08",
+    "name": "Passport Value Pack",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -733,10 +733,10 @@
     "rows": null,
     "id": "preset-1779854890932",
     "code": "Id Package 08",
-    "category": "Uncategorized"
+    "category": "Basic ID Packages"
   },
   {
-    "name": "Id Package 07",
+    "name": "School Requirement Pack",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -811,7 +811,7 @@
     "rows": null,
     "id": "preset-1779855481132",
     "code": "Id Package 07",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
     "id": "preset-1780126757234",
@@ -924,7 +924,7 @@
     "category": "Single Prints"
   },
   {
-    "name": "Id Package 09",
+    "name": "1x1 Mega Pack",
     "paper": "4R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -1041,10 +1041,10 @@
     "rows": null,
     "id": "preset-1780127793184",
     "code": "Id Package 09",
-    "category": "Uncategorized"
+    "category": "Basic ID Packages"
   },
   {
-    "name": "4R Combo (2x2R)",
+    "name": "Mini 2R Bundle",
     "paper": "4R",
     "orientation": "portrait",
     "borderWidth": 0,
@@ -1069,11 +1069,11 @@
     "cols": null,
     "rows": null,
     "id": "preset-1780128739231",
-    "code": "4R Combo (2x2R)",
-    "category": "Uncategorized"
+    "code": "2R Combo",
+    "category": "Mini Photo Bundles"
   },
   {
-    "name": "5R Combo (2x3R)",
+    "name": "Mini 3R Bundle",
     "paper": "5R",
     "orientation": "portrait",
     "borderWidth": 0,
@@ -1098,8 +1098,8 @@
     "cols": null,
     "rows": null,
     "id": "preset-1780129132940",
-    "code": "5R Combo (2x3R)",
-    "category": "Uncategorized"
+    "code": "3R Combo",
+    "category": "Mini Photo Bundles"
   },
   {
     "name": "Student Essentials Bundle",
@@ -2105,7 +2105,7 @@
     "category": "Standard Photo Bundles"
   },
   {
-    "name": "A4 Combo 1 (2xA5)",
+    "name": "A5 Duo Pack",
     "paper": "A4",
     "orientation": "portrait",
     "borderWidth": 0,
@@ -2130,11 +2130,11 @@
     "cols": null,
     "rows": null,
     "id": "preset-1780136262142",
-    "code": "A4 Combo 1 (2xA5)",
-    "category": "Uncategorized"
+    "code": "A5 Combo",
+    "category": "Mini Photo Bundles"
   },
   {
-    "name": "A5 Combo (2xA6)",
+    "name": "A6 Duo Pack",
     "paper": "A5",
     "orientation": "portrait",
     "borderWidth": 0,
@@ -2159,12 +2159,12 @@
     "cols": null,
     "rows": null,
     "id": "preset-1780136672678",
-    "code": "A5 Combo (2xA6)",
-    "category": "Uncategorized"
+    "code": "A6 Combo 1",
+    "category": "Mini Photo Bundles"
   },
   {
     "id": "preset-1780136914339",
-    "name": "A4 Combo 2 (4xA6)",
+    "name": "A6 Family Pack",
     "paper": "A4",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2202,12 +2202,12 @@
         "h": 1169
       }
     ],
-    "code": "A4 Combo 2 (4xA6)",
-    "category": "Uncategorized"
+    "code": "A6 Combo 2",
+    "category": "Mini Photo Bundles"
   },
   {
     "id": "preset-1780137100759",
-    "name": "A4 Combo 3 (8xA7)",
+    "name": "A7 Party Pack",
     "paper": "A4",
     "orientation": "portrait",
     "borderWidth": 0,
@@ -2273,12 +2273,12 @@
         "h": 803
       }
     ],
-    "code": "A4 Combo 3 (8xA7)",
-    "category": "Uncategorized"
+    "code": "A7 Combo 2",
+    "category": "Mini Photo Bundles"
   },
   {
     "id": "preset-1780137140756",
-    "name": "A5 Combo (4xA7)",
+    "name": "A7 Mini Pack",
     "paper": "A5",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2316,11 +2316,11 @@
         "h": 803
       }
     ],
-    "code": "A5 Combo (4xA7)",
-    "category": "Uncategorized"
+    "code": "A7 Combo 1",
+    "category": "Mini Photo Bundles"
   },
   {
-    "name": "Id Package 11",
+    "name": "2x2 Duo Bundle",
     "paper": "5R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2416,10 +2416,10 @@
     "rows": null,
     "id": "preset-1780309211120",
     "code": "Id Package 11",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
-    "name": "Id Package 13",
+    "name": "Passport Mega Bundle",
     "paper": "A5",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2599,10 +2599,10 @@
     "rows": null,
     "id": "preset-1780310031829",
     "code": "Id Package 13",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
-    "name": "Id Package 01",
+    "name": "1x1 Budget Pack",
     "paper": "3R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2698,10 +2698,10 @@
     "rows": null,
     "id": "preset-1780310279817",
     "code": "Id Package 01",
-    "category": "Uncategorized"
+    "category": "Basic ID Packages"
   },
   {
-    "name": "Id Package 02",
+    "name": "Student ID Pack",
     "paper": "3R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2755,10 +2755,10 @@
     "rows": null,
     "id": "preset-1780310359739",
     "code": "Id Package 02",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
-    "name": "Id Package 10",
+    "name": "2x2 Standard Pack",
     "paper": "5R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2812,10 +2812,10 @@
     "rows": null,
     "id": "preset-1780311899668",
     "code": "Id Package 10",
-    "category": "Uncategorized"
+    "category": "Basic ID Packages"
   },
   {
-    "name": "Id Package 04",
+    "name": "Passport Combo Pack",
     "paper": "3R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2876,10 +2876,10 @@
     "rows": null,
     "id": "preset-1780312107863",
     "code": "Id Package 04",
-    "category": "Uncategorized"
+    "category": "Mixed ID Packages"
   },
   {
-    "name": "Id Package 03",
+    "name": "Passport Basic Pack",
     "paper": "3R",
     "orientation": "landscape",
     "borderWidth": 0,
@@ -2926,6 +2926,6 @@
     "rows": null,
     "id": "preset-1780312193105",
     "code": "Id Package 03",
-    "category": "Uncategorized"
+    "category": "Basic ID Packages"
   }
 ]
