@@ -15,12 +15,12 @@
 // Fixed list — no new categories are created at runtime.
 
 export const CATEGORIES = [
-  { id: 'single-prints',           label: 'Single Prints' },
-  { id: 'basic-id-packages',       label: 'Basic ID Packages' },
-  { id: 'mixed-id-packages',       label: 'Mixed ID Packages' },
-  { id: 'mini-photo-bundles',      label: 'Mini Photo Bundles' },
-  { id: 'standard-photo-bundles',  label: 'Standard Photo Bundles' },
-  { id: 'creative-bundles',        label: 'Creative Bundles' },
+  { id: 'basic-id-packages',       label: 'Basic ID Packages',       order: 1 },
+  { id: 'mixed-id-packages',       label: 'Mixed ID Packages',       order: 2 },
+  { id: 'single-prints',           label: 'Single Prints',           order: 3 },
+  { id: 'mini-photo-bundles',      label: 'Mini Photo Bundles',       order: 4 },
+  { id: 'standard-photo-bundles',  label: 'Standard Photo Bundles',  order: 5 },
+  { id: 'creative-bundles',        label: 'Creative Bundles',        order: 6 },
 ]
 
 // ─── Paper Sizes ──────────────────────────────────────────────────────────────

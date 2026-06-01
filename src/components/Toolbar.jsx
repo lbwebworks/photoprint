@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { GRID_OPTIONS, PAPER_SIZES, ORIENTATIONS, getUsable, mmToPx, pxToMm, cmToPx, pxToCm, inchToPx, pxToInch } from '../utils/layoutEngine'
 import { IS_LOCAL, SAMPLE_PRESETS, publishPreset, unpublishPreset } from '../utils/presets'
+import { CATEGORIES } from '../data/tables'
 
 const LAYOUTS = ['Grid', 'Free Size']
 const MIN_BLOCK_PX = mmToPx(10)
@@ -9,8 +10,8 @@ const TILE_SIZE   = 75   // preset tile width & height in px
 const TILE_GAP    = 4
 const PANEL_PAD   = 16   // p-4 = 16px each side
 const MIN_PANEL   = TILE_SIZE + PANEL_PAD * 2 + 20  // at least 1 column
-// Default: 4 tiles per row
-const DEFAULT_PANEL = 4 * TILE_SIZE + 3 * TILE_GAP + PANEL_PAD * 2
+// Default: 4 tiles per row → 4×79 + 3×4 + 2×16 = 360px
+const DEFAULT_PANEL = 4 * TILE_SIZE + 10 * TILE_GAP + PANEL_PAD * 2
 
 // Minimum preset grid height: 2 rows
 const PRESET_MIN_H = 2 * TILE_SIZE + TILE_GAP
@@ -325,83 +326,183 @@ export default function Toolbar({
               >↓ Export</button>
             </div>
 
-            {/* Preset grid */}
+            {/* Preset grid — grouped by category */}
             <div
-              className="overflow-y-auto"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: `repeat(${cols}, ${TILE_SIZE}px)`,
-                gap: TILE_GAP,
-                minHeight: PRESET_MIN_H,
-                maxHeight: '60vh',
-              }}
+              className="overflow-y-auto flex flex-col gap-3"
+              style={{ minHeight: PRESET_MIN_H, maxHeight: '60vh' }}
             >
-              {/* Create Preset tile */}
+              {/* Create + None tiles always at the top */}
               <div
-                onClick={onCreatePreset}
-                style={{ width: TILE_SIZE, height: TILE_SIZE, borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                className="rounded border border-dashed cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:text-indigo-500 hover:bg-[var(--bg-elevated)]"
-              >
-                <span className="text-lg leading-none">+</span>
-                <span className="text-[10px] font-medium leading-tight text-center px-1">Create</span>
-              </div>
-
-              {/* None tile */}
-              <div
-                onClick={() => onSelectPreset(null)}
                 style={{
-                  width: TILE_SIZE, height: TILE_SIZE,
-                  background:  !activePresetId ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                  borderColor: !activePresetId ? '#6366f1' : 'var(--border)',
-                  color:       !activePresetId ? 'var(--text-primary)' : 'var(--text-muted)',
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${cols}, ${TILE_SIZE}px)`,
+                  gap: TILE_GAP,
                 }}
-                className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
               >
-                <span className="text-xs font-medium leading-tight text-center px-1">None</span>
+                {/* Create Preset tile */}
+                <div
+                  onClick={onCreatePreset}
+                  style={{ width: TILE_SIZE, height: TILE_SIZE, borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                  className="rounded border border-dashed cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:text-indigo-500 hover:bg-[var(--bg-elevated)]"
+                >
+                  <span className="text-lg leading-none">+</span>
+                  <span className="text-[10px] font-medium leading-tight text-center px-1">Create</span>
+                </div>
+
+                {/* None tile */}
+                <div
+                  onClick={() => onSelectPreset(null)}
+                  style={{
+                    width: TILE_SIZE, height: TILE_SIZE,
+                    background:  !activePresetId ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                    borderColor: !activePresetId ? '#6366f1' : 'var(--border)',
+                    color:       !activePresetId ? 'var(--text-primary)' : 'var(--text-muted)',
+                  }}
+                  className="rounded border cursor-pointer transition flex flex-col items-center justify-center gap-0.5 hover:border-indigo-400 hover:bg-[var(--bg-elevated)]"
+                >
+                  <span className="text-xs font-medium leading-tight text-center px-1">None</span>
+                </div>
               </div>
 
-              {[...presets]
-                .filter((p) => !filterPaper || !p.paper || p.paper === filterPaper)
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((p) => {
-                  const mismatch = multiPage && p.paper && p.paper !== paper
+              {/* Category groups — sorted by CATEGORIES[].order */}
+              {[...CATEGORIES]
+                .sort((a, b) => a.order - b.order)
+                .map((cat) => {
+                  const group = [...presets]
+                    .filter((p) => p.category === cat.label)
+                    .filter((p) => !filterPaper || !p.paper || p.paper === filterPaper)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+
+                  if (group.length === 0) return null
+
                   return (
-                    <div
-                      key={p.id}
-                      onClick={() => {
-                        if (!mismatch) onSelectPreset(p.id)
-                      }}
-                      style={{
-                        width: TILE_SIZE, height: TILE_SIZE,
-                        background:  activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                        borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
-                        color: 'var(--text-primary)',
-                      }}
-                      className={`rounded border transition flex flex-col items-center justify-center gap-0.5 relative group ${mismatch ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-indigo-400 hover:bg-[var(--bg-elevated)]'}`}
-                      title={mismatch ? 'Only presets matching the current paper size are selectable when multiple pages are active.' : undefined}
-                    >
-                      <span className="text-[11px] font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
-                      <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight">
-                        {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
-                      </span>
-                      {(p.paper || p.orientation) && (
-                        <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight text-center px-1">
-                          {[
-                            p.paper       ? PAPER_SIZES[p.paper]?.label : null,
-                            p.orientation ? p.orientation[0].toUpperCase() + p.orientation.slice(1) : null,
-                          ].filter(Boolean).join(' · ')}
+                    <div key={cat.id} className="flex flex-col gap-1.5">
+                      {/* Category separator */}
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          {cat.label}
                         </span>
-                      )}
-                      <PresetMenu
-                        preset={p}
-                        onPublish={IS_LOCAL ? handlePublish : null}
-                        onUnpublish={IS_LOCAL && SAMPLE_PRESETS.some((s) => s.id === p.id) ? handleUnpublish : null}
-                        onEdit={onEditPreset}
-                        onDelete={onDeletePreset}
-                      />
+                        <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                      </div>
+
+                      {/* Tiles for this category */}
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: `repeat(${cols}, ${TILE_SIZE}px)`,
+                          gap: TILE_GAP,
+                        }}
+                      >
+                        {group.map((p) => {
+                          const mismatch = multiPage && p.paper && p.paper !== paper
+                          return (
+                            <div
+                              key={p.id}
+                              onClick={() => { if (!mismatch) onSelectPreset(p.id) }}
+                              style={{
+                                width: TILE_SIZE, height: TILE_SIZE,
+                                background:  activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                                borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
+                                color: 'var(--text-primary)',
+                              }}
+                              className={`rounded border transition flex flex-col items-center justify-center gap-0.5 relative group ${mismatch ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-indigo-400 hover:bg-[var(--bg-elevated)]'}`}
+                              title={mismatch ? 'Only presets matching the current paper size are selectable when multiple pages are active.' : undefined}
+                            >
+                              <span className="text-[11px] font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
+                              <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight">
+                                {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
+                              </span>
+                              {(p.paper || p.orientation) && (
+                                <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight text-center px-1">
+                                  {[
+                                    p.paper       ? PAPER_SIZES[p.paper]?.label : null,
+                                    p.orientation ? p.orientation[0].toUpperCase() + p.orientation.slice(1) : null,
+                                  ].filter(Boolean).join(' · ')}
+                                </span>
+                              )}
+                              <PresetMenu
+                                preset={p}
+                                onPublish={IS_LOCAL ? handlePublish : null}
+                                onUnpublish={IS_LOCAL && SAMPLE_PRESETS.some((s) => s.id === p.id) ? handleUnpublish : null}
+                                onEdit={onEditPreset}
+                                onDelete={onDeletePreset}
+                              />
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )
-                })}
+                })
+              }
+
+              {/* Fallback: presets with no matching category (e.g. user-created) */}
+              {(() => {
+                const knownLabels = new Set(CATEGORIES.map((c) => c.label))
+                const uncategorized = [...presets]
+                  .filter((p) => !knownLabels.has(p.category))
+                  .filter((p) => !filterPaper || !p.paper || p.paper === filterPaper)
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                if (uncategorized.length === 0) return null
+                return (
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
+                        Other
+                      </span>
+                      <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                    </div>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: `repeat(${cols}, ${TILE_SIZE}px)`,
+                        gap: TILE_GAP,
+                      }}
+                    >
+                      {uncategorized.map((p) => {
+                        const mismatch = multiPage && p.paper && p.paper !== paper
+                        return (
+                          <div
+                            key={p.id}
+                            onClick={() => { if (!mismatch) onSelectPreset(p.id) }}
+                            style={{
+                              width: TILE_SIZE, height: TILE_SIZE,
+                              background:  activePresetId === p.id ? 'var(--bg-elevated)' : 'var(--bg-base)',
+                              borderColor: activePresetId === p.id ? '#6366f1' : 'var(--border)',
+                              color: 'var(--text-primary)',
+                            }}
+                            className={`rounded border transition flex flex-col items-center justify-center gap-0.5 relative group ${mismatch ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-indigo-400 hover:bg-[var(--bg-elevated)]'}`}
+                            title={mismatch ? 'Only presets matching the current paper size are selectable when multiple pages are active.' : undefined}
+                          >
+                            <span className="text-[11px] font-medium leading-tight text-center px-1 line-clamp-2">{p.name}</span>
+                            <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight">
+                              {p.slots ? `${p.slots.length} blocks` : `${p.cols}×${p.rows}`}
+                            </span>
+                            {(p.paper || p.orientation) && (
+                              <span style={{ color: 'var(--text-muted)' }} className="text-[9px] leading-tight text-center px-1">
+                                {[
+                                  p.paper       ? PAPER_SIZES[p.paper]?.label : null,
+                                  p.orientation ? p.orientation[0].toUpperCase() + p.orientation.slice(1) : null,
+                                ].filter(Boolean).join(' · ')}
+                              </span>
+                            )}
+                            <PresetMenu
+                              preset={p}
+                              onPublish={IS_LOCAL ? handlePublish : null}
+                              onUnpublish={IS_LOCAL && SAMPLE_PRESETS.some((s) => s.id === p.id) ? handleUnpublish : null}
+                              onEdit={onEditPreset}
+                              onDelete={onDeletePreset}
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )}
