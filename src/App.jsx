@@ -8,6 +8,7 @@ import ImagePanel from './components/ImagePanel'
 import { mmToPx, PAPER_SIZES, getPaperDims } from './utils/layoutEngine'
 import { loadPresets, createPreset, updatePreset, deletePreset } from './utils/presets'
 import { usePersistedState } from './utils/usePersistedState'
+import { CATEGORIES } from './data/tables'
 
 function makePageId() { return `page-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }
 
@@ -76,6 +77,7 @@ export default function App() {
   const [showSavePresetDialog, setShowSavePresetDialog] = useState(false)
   const [pendingPreset, setPendingPreset] = useState(null)
   const [savePresetName, setSavePresetName] = useState('')
+  const [savePresetCategory, setSavePresetCategory] = useState(CATEGORIES[0].label)
 
   // Merge shipped presets with any local extras stored in localStorage.
   useEffect(() => {
@@ -217,6 +219,7 @@ export default function App() {
     }
     setPendingPreset(pending)
     setSavePresetName('')
+    setSavePresetCategory(CATEGORIES[0].label)
     setShowSavePresetDialog(true)
   }
 
@@ -224,16 +227,18 @@ export default function App() {
     if (!pendingPreset) return
     const name = (savePresetName || '').trim()
     if (!name) { alert('Please enter a preset name.'); return }
-    const toSave = { ...pendingPreset, name }
+    const toSave = { ...pendingPreset, name, category: savePresetCategory }
     handleSavePreset(toSave)
     setPendingPreset(null)
     setSavePresetName('')
+    setSavePresetCategory(CATEGORIES[0].label)
     setShowSavePresetDialog(false)
   }
 
   function handleCancelSavePreset() {
     setPendingPreset(null)
     setSavePresetName('')
+    setSavePresetCategory(CATEGORIES[0].label)
     setShowSavePresetDialog(false)
   }
 
@@ -662,6 +667,29 @@ export default function App() {
                     borderColor: 'var(--border)',
                   }}
                 />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label
+                  className="text-xs"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Category
+                </label>
+                <select
+                  value={savePresetCategory}
+                  onChange={(e) => setSavePresetCategory(e.target.value)}
+                  className="text-sm px-3 py-2 rounded border focus:outline-none cursor-pointer"
+                  style={{
+                    background: 'var(--bg-base)',
+                    color: 'var(--text-primary)',
+                    borderColor: 'var(--border)',
+                  }}
+                >
+                  {[...CATEGORIES].sort((a, b) => a.order - b.order).map((c) => (
+                    <option key={c.id} value={c.label}>{c.label}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex justify-end gap-2">

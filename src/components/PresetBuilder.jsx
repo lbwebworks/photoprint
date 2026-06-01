@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { Stage, Layer, Rect, Transformer, Group, Circle, Text, Line } from 'react-konva'
 import { getPaperDims, PAPER_SIZES, ORIENTATIONS, MARGIN, mmToPx, cmToPx, inchToPx, pxToCm, pxToInch, pxToMm, computeBlocksByGrid } from '../utils/layoutEngine'
+import { CATEGORIES } from '../data/tables'
 
 const DEFAULT_BLOCK_W = 400
 const DEFAULT_BLOCK_H = 400
@@ -193,6 +194,7 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
   const [blocks, setBlocks] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [name, setName] = useState('')
+  const [category, setCategory] = useState(initialPreset?.category ?? CATEGORIES[0].label)
   const [unit, setUnit] = useState('px')
   const [freeForm, setFreeForm] = useState(false)
   const [snapGuides, setSnapGuides] = useState([])
@@ -219,6 +221,7 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
     if (!initialPreset) {
       setBlocks([])
       setName('')
+      setCategory(CATEGORIES[0].label)
       setSelectedId(null)
       return
     }
@@ -230,6 +233,7 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
 
     setBlocks(layoutBlocks)
     setName(initialPreset.name || '')
+    setCategory(initialPreset.category ?? CATEGORIES[0].label)
     setSelectedId(layoutBlocks[0]?.id ?? null)
   }, [initialPreset, paper, orientation, gap])
 
@@ -358,6 +362,7 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
     onSave({
       ...(initialPreset?.id ? { id: initialPreset.id } : {}),
       name: name.trim(),
+      category,
       paper, orientation,
       borderWidth, borderColor, gap,
       slots: blocks,
@@ -446,6 +451,16 @@ export default function PresetBuilder({ borderWidth, borderColor, gap, onSave, o
           style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
           className="text-sm px-3 py-1.5 rounded border focus:outline-none flex-1 min-w-32"
         />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+          className="text-sm px-2 py-1.5 rounded border focus:outline-none cursor-pointer"
+        >
+          {[...CATEGORIES].sort((a, b) => a.order - b.order).map((c) => (
+            <option key={c.id} value={c.label}>{c.label}</option>
+          ))}
+        </select>
         <button onClick={addBlock}
           className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-1.5 rounded transition">
           + Add Block
